@@ -1686,8 +1686,8 @@
     const qs = JSON.parse(stored);
     if (qs.length === 0) { toast('You nailed them all! Nothing to redo. 🎉', 'success', 4000); return; }
 
-    const params = new URLSearchParams({ mode, module: moduleId, name: encodeURIComponent(moduleName), chapters: chapterIds.join(','), redo: '1' });
-    window.location.href = `/quiz.html?${params}`;
+    const params = new URLSearchParams({ mode, module: moduleId, name: moduleName, chapters: chapterIds.join(','), redo: '1' });
+    window.location.href = `quiz.html?${params.toString()}`;
   };
 
   // ══════════════════════════════════════════════
