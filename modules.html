@@ -876,13 +876,13 @@
     const moduleName = first.moduleName;
 
     const params = new URLSearchParams({
-      mode:       selectedMode,
-      module:     moduleId,
-      moduleName: moduleName,
-      chapters:   chapterIds.join(',')
+      mode:     selectedMode,
+      module:   moduleId,
+      name:     moduleName,
+      chapters: chapterIds.join(',')
     });
 
-    window.location.href = `/quiz.html?${params.toString()}`;
+    window.location.href = `quiz.html?${params.toString()}`;
   };
 
   // ── Sidebar toggle ─────────────────────────────────────────────
