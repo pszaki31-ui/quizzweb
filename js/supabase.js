@@ -26,7 +26,7 @@ export async function getCurrentProfile() {
 export async function requireAuth() {
   const user = await getCurrentUser();
   if (!user) {
-    window.location.href = '/auth.html';
+    window.location.href = './auth.html';
     return null;
   }
   return user;
@@ -35,7 +35,7 @@ export async function requireAuth() {
 export async function requireAdmin() {
   const profile = await getCurrentProfile();
   if (!profile || !profile.is_admin) {
-    window.location.href = '/index.html';
+    window.location.href = './index.html';
     return null;
   }
   return profile;
@@ -43,7 +43,7 @@ export async function requireAdmin() {
 
 export async function signOut() {
   await supabase.auth.signOut();
-  window.location.href = '/auth.html';
+  window.location.href = './auth.html';
 }
 
 
@@ -234,3 +234,7 @@ export function getScoreLabel(pct) {
   if (pct >= 30) return 'Rough';
   return 'Nuclear';
 }
+
+
+ 
+  
