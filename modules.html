@@ -606,8 +606,9 @@
 
       const { count: masteredQ } = await supabase
         .from('question_progress')
-        .select('id', { count: 'exact', head: true })
+        .select('id, questions!inner(module_id)', { count: 'exact', head: true })
         .eq('user_id', currentUser.id)
+        .eq('questions.module_id', mod.id)
         .gt('times_correct', 0);
 
       moduleProgress[mod.id] = totalQ > 0 ? Math.round((masteredQ / totalQ) * 100) : 0;
@@ -909,3 +910,5 @@
 
 </body>
 </html>
+    
+  
