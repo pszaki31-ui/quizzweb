@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedMCQ — Progress</title>
+  <link rel="stylesheet" href="css/main.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    /* ══════════════════════════════════════════════
+       PROGRESS PAGE STYLES
+       ══════════════════════════════════════════════ */
+
+    .progress-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .progress-grid .full { grid-column: 1 / -1; }
+
+    /* ── STAT PILL ROW ── */
+    .stat-pills {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .stat-pill {
+      background: var(--surface);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px 22px;
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--t-med) var(--ease), box-shadow var(--t-med) var(--ease);
+    }
+
+    .stat-pill:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .stat-pill-icon {
+      font-size: 20px;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .stat-pill-val {
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: -1.5px;
+      line-height: 1;
+      background: linear-gradient(135deg, var(--cyan-dark), var(--pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 4px;
+    }
+
+    .stat-pill-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* ── GLASS CHART CARD ── */
+    .chart-card {
+      background: var(--surface);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: 24px;
+      transition: transform var(--t-med) var(--ease), box-shadow var(--t-med) var(--ease);
+    }
+
+    .chart-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .chart-card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.2px;
+      margin-bottom: 4px;
+    }
+
+    .chart-card-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+    }
+
+    /* ── MODULE MASTERY LIST ── */
+    .mastery-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .mastery-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .mastery-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .mastery-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mastery-icon { font-size: 15px; }
+
+    .mastery-pct {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--cyan-dark);
+    }
+
+    .mastery-bar {
+      height: 6px;
+      background: var(--bg-alt);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .mastery-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--cyan), var(--pink));
+      transition: width 0.8s var(--ease-out);
+    }
+
+    .mastery-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* ── HEATMAP ── */
+    .heatmap-wrap {
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .heatmap-grid {
+      display: flex;
+      gap: 3px;
+      min-width: fit-content;
+    }
+
+    .heatmap-col {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .heatmap-cell {
+      width: 13px;
+      height: 13px;
+      border-radius: 3px;
+      background: var(--bg-alt);
+      transition: transform var(--t-fast);
+      cursor: default;
+      position: relative;
+    }
+
+    .heatmap-cell:hover { transform: scale(1.4); z-index: 10; }
+
+    .heatmap-cell.level-1 { background: rgba(0,200,212,0.2); }
+    .heatmap-cell.level-2 { background: rgba(0,200,212,0.45); }
+    .heatmap-cell.level-3 { background: rgba(0,200,212,0.7); }
+    .heatmap-cell.level-4 { background: var(--cyan); box-shadow: 0 0 6px var(--cyan-glow); }
+
+    .heatmap-months {
+      display: flex;
+      gap: 3px;
+      margin-bottom: 4px;
+      min-width: fit-content;
+    }
+
+    .heatmap-month-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: 'DM Mono', monospace;
+      width: 13px;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .heatmap-legend {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .legend-cell {
+      width: 11px; height: 11px;
+      border-radius: 2px;
+      background: var(--bg-alt);
+    }
+
+    .legend-cell.l1 { background: rgba(0,200,212,0.2); }
+    .legend-cell.l2 { background: rgba(0,200,212,0.45); }
+    .legend-cell.l3 { background: rgba(0,200,212,0.7); }
+    .legend-cell.l4 { background: var(--cyan); }
+
+    /* ── DIFFICULTY ACCURACY ── */
+    .diff-accuracy-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .diff-acc-item {}
+
+    .diff-acc-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .diff-acc-name {
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .diff-acc-val {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .diff-acc-bar {
+      height: 8px;
+      background: var(--bg-alt);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .diff-acc-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.8s var(--ease-out);
+    }
+
+    .fill-easy   { background: linear-gradient(90deg, #10c98a, #00c8d4); }
+    .fill-medium { background: linear-gradient(90deg, #f5a623, #f062a4); }
+    .fill-hard   { background: linear-gradient(90deg, #f04060, #c0407a); }
+
+    /* ── NEMESIS QUESTIONS ── */
+    .nemesis-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nemesis-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      background: rgba(240,64,96,0.04);
+      border: 1px solid rgba(240,64,96,0.1);
+      transition: all var(--t-fast);
+    }
+
+    .nemesis-item:hover {
+      background: rgba(240,64,96,0.08);
+      transform: translateX(3px);
+    }
+
+    .nemesis-rank {
+      font-size: 16px;
+      font-weight: 800;
+      color: rgba(240,64,96,0.25);
+      font-family: 'DM Mono', monospace;
+      min-width: 24px;
+    }
+
+    .nemesis-text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .nemesis-q {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .nemesis-chapter {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .nemesis-count {
+      font-size: 12px;
+      font-weight: 700;
+      color: #c02040;
+      font-family: 'DM Mono', monospace;
+      background: rgba(240,64,96,0.1);
+      padding: 3px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .nemesis-badge {
+      font-size: 10px;
+      padding: 2px 7px;
+      background: rgba(240,64,96,0.12);
+      color: #c02040;
+      border-radius: 999px;
+      font-weight: 600;
+      border: 1px solid rgba(240,64,96,0.2);
+    }
+
+    /* Section heading */
+    .section-heading {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-heading::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-soft);
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 32px 20px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .empty-icon {
+      font-size: 32px;
+      display: block;
+      margin-bottom: 10px;
+      opacity: 0.35;
+    }
+
+    @media (max-width: 900px) {
+      .progress-grid { grid-template-columns: 1fr; }
+      .stat-pills    { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 500px) {
+      .stat-pills { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-shell" id="app-shell">
+
+  <!-- ── SIDEBAR ── -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-avatar" id="sidebar-avatar">?</div>
+      <span class="sidebar-name" id="sidebar-name">Loading…</span>
+    </div>
+    <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">‹</button>
+    <div class="sidebar-nav">
+      <a class="nav-item" href="./index.html" data-label="Dashboard">
+        <span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span>
+      </a>
+      <a class="nav-item" href="./modules.html" data-label="Modules">
+        <span class="nav-icon">📚</span><span class="nav-label">Modules</span>
+      </a>
+      <a class="nav-item active" href="./progress.html" data-label="Progress">
+        <span class="nav-icon">📈</span><span class="nav-label">Progress</span>
+      </a>
+      <a class="nav-item" href="./scoreboard.html" data-label="Scoreboard">
+        <span class="nav-icon">🏆</span><span class="nav-label">Scoreboard</span>
+      </a>
+      <a class="nav-item" href="./profile.html" data-label="Profile">
+        <span class="nav-icon">👤</span><span class="nav-label">Profile</span>
+      </a>
+    </div>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="handleSignOut()">
+        <span class="nav-icon">🚪</span><span>Sign Out</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ── MAIN CONTENT ── -->
+  <main class="main-content">
+
+    <div class="page-header animate-in">
+      <div class="page-title">Progress</div>
+      <div class="page-subtitle">Your stats, mastery, and study history at a glance.</div>
+    </div>
+
+    <!-- ── STAT PILLS ── -->
+    <div class="stat-pills animate-in stagger-1" id="stat-pills">
+      <div class="stat-pill skeleton" style="height:90px;"></div>
+      <div class="stat-pill skeleton stagger-1" style="height:90px;"></div>
+      <div class="stat-pill skeleton stagger-2" style="height:90px;"></div>
+      <div class="stat-pill skeleton stagger-3" style="height:90px;"></div>
+    </div>
+
+    <div class="progress-grid">
+
+      <!-- ── SCORE OVER TIME ── -->
+      <div class="full animate-in stagger-2">
+        <div class="section-heading">Score Over Time</div>
+        <div class="chart-card">
+          <div class="chart-card-title">Quiz Scores</div>
+          <div class="chart-card-sub">Your last 20 attempts across all modules</div>
+          <div class="chart-wrap" style="height:220px;">
+            <canvas id="scoreChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── MODULE MASTERY ── -->
+      <div class="animate-in stagger-3">
+        <div class="section-heading">Module Mastery</div>
+        <div class="chart-card" style="height:100%;">
+          <div class="chart-card-title">Mastery by Module</div>
+          <div class="chart-card-sub">Questions answered correctly at least once</div>
+          <div class="mastery-list" id="mastery-list">
+            <div class="skeleton" style="height:40px;border-radius:8px;"></div>
+            <div class="skeleton stagger-1" style="height:40px;border-radius:8px;"></div>
+            <div class="skeleton stagger-2" style="height:40px;border-radius:8px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ACCURACY BY DIFFICULTY ── -->
+      <div class="animate-in stagger-3">
+        <div class="section-heading">Accuracy by Difficulty</div>
+        <div class="chart-card" style="height:100%;">
+          <div class="chart-card-title">How you do per tier</div>
+          <div class="chart-card-sub">Based on individual question answers</div>
+          <div class="diff-accuracy-list" id="diff-accuracy">
+            <div class="skeleton" style="height:44px;border-radius:8px;"></div>
+            <div class="skeleton stagger-1" style="height:44px;border-radius:8px;"></div>
+            <div class="skeleton stagger-2" style="height:44px;border-radius:8px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── HEATMAP ── -->
+      <div class="full animate-in stagger-4">
+        <div class="section-heading">Study Activity</div>
+        <div class="chart-card">
+          <div class="chart-card-title">Activity Calendar</div>
+          <div class="chart-card-sub">Last 16 weeks of quiz activity</div>
+          <div class="heatmap-wrap">
+            <div id="heatmap-months" class="heatmap-months"></div>
+            <div class="heatmap-grid" id="heatmap"></div>
+            <div class="heatmap-legend">
+              <span>Less</span>
+              <div class="legend-cell"></div>
+              <div class="legend-cell l1"></div>
+              <div class="legend-cell l2"></div>
+              <div class="legend-cell l3"></div>
+              <div class="legend-cell l4"></div>
+              <span>More</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── NEMESIS QUESTIONS ── -->
+      <div class="full animate-in stagger-5">
+        <div class="section-heading">Nemesis Questions</div>
+        <div class="chart-card">
+          <div class="chart-card-title">Most Failed</div>
+          <div class="chart-card-sub">Questions you've gotten wrong 3+ times</div>
+          <div class="nemesis-list" id="nemesis-list">
+            <div class="skeleton" style="height:56px;border-radius:8px;margin-bottom:8px;"></div>
+            <div class="skeleton stagger-1" style="height:56px;border-radius:8px;margin-bottom:8px;"></div>
+            <div class="skeleton stagger-2" style="height:56px;border-radius:8px;"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script type="module">
+  import {
+    supabase,
+    requireAuth,
+    getCurrentProfile,
+    getModules,
+    getUserAttempts,
+    signOut,
+  } from './js/supabase.js';
+
+  const moduleIcons = {
+    anatomy:'🦴', physiology:'❤️', biochemistry:'🧪',
+    pharmacology:'💊', pathology:'🔬', microbiology:'🦠',
+    immunology:'🛡️', neuroscience:'🧠', cardiology:'🫀',
+    respiratory:'🫁', default:'📖'
+  };
+
+  function getIcon(name) {
+    const key = name.toLowerCase();
+    for (const [k,v] of Object.entries(moduleIcons)) { if (key.includes(k)) return v; }
+    return moduleIcons.default;
+  }
+
+  let currentUser = null;
+  let allAttempts = [];
+  let allModules  = [];
+
+  async function init() {
+    currentUser = await requireAuth();
+    if (!currentUser) return;
+
+    const profile = await getCurrentProfile();
+    if (profile) {
+      const name = profile.name || currentUser.email;
+      const initials = name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+      document.getElementById('sidebar-avatar').textContent = initials;
+      document.getElementById('sidebar-name').textContent   = name;
+    }
+
+    setupSidebarToggle();
+
+    // ── 3 queries total, all in parallel ──────────────────────
+    const [attempts, modules, progressData] = await Promise.all([
+      getUserAttempts(currentUser.id),
+      getModules(),
+      // Single query: all question_progress for this user, with question module+difficulty
+      supabase
+        .from('question_progress')
+        .select('question_id, times_correct, times_wrong, questions(module_id, difficulty, text, chapters(name))')
+        .eq('user_id', currentUser.id)
+        .then(r => r.data || [])
+    ]);
+
+    allAttempts = attempts;
+    allModules  = modules;
+
+    // Render everything from the data already in memory
+    renderStatPills();
+    renderScoreChart();
+    renderModuleMastery(progressData);
+    renderDiffAccuracy(progressData);
+    renderHeatmap();
+    renderNemesis(progressData);
+  }
+
+  // ── STAT PILLS ────────────────────────────────────────────────
+  function renderStatPills() {
+    const total = allAttempts.length;
+    const avg   = total > 0
+      ? (allAttempts.reduce((s,a) => s+(a.score_20||0), 0) / total).toFixed(1) : '—';
+    const best  = total > 0
+      ? Math.max(...allAttempts.map(a => a.score_20||0)).toFixed(1) : '—';
+    const hrs   = (allAttempts.reduce((s,a) => s+(a.time_used||0), 0) / 3600).toFixed(1);
+
+    document.getElementById('stat-pills').innerHTML = [
+      { icon:'📝', val:total,   label:'Total Quizzes' },
+      { icon:'📊', val:avg,     label:'Avg Score /20' },
+      { icon:'🏆', val:best,    label:'Best Score /20' },
+      { icon:'⏱',  val:hrs+'h', label:'Total Study Time' },
+    ].map((p,i) => `
+      <div class="stat-pill animate-in" style="animation-delay:${i*60}ms;">
+        <span class="stat-pill-icon">${p.icon}</span>
+        <div class="stat-pill-val">${p.val}</div>
+        <div class="stat-pill-label">${p.label}</div>
+      </div>
+    `).join('');
+  }
+
+  // ── SCORE CHART ───────────────────────────────────────────────
+  function renderScoreChart() {
+    const last20 = [...allAttempts].slice(0, 20).reverse();
+
+    if (last20.length === 0) {
+      document.querySelector('.chart-wrap').innerHTML =
+        `<div class="empty-state"><span class="empty-icon">📈</span>No attempts yet.</div>`;
+      return;
+    }
+
+    const ctx  = document.getElementById('scoreChart').getContext('2d');
+    const grad = ctx.createLinearGradient(0,0,0,200);
+    grad.addColorStop(0, 'rgba(0,200,212,0.25)');
+    grad.addColorStop(1, 'rgba(0,200,212,0.0)');
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: last20.map(a => new Date(a.completed_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' })),
+        datasets: [{
+          data: last20.map(a => a.score_20||0),
+          borderColor: '#00c8d4',
+          borderWidth: 2,
+          pointBackgroundColor: '#00c8d4',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          backgroundColor: grad,
+          fill: true,
+          tension: 0.4,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        interaction: { mode:'index', intersect:false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(255,255,255,0.95)',
+            borderColor: 'rgba(0,200,212,0.3)',
+            borderWidth: 1,
+            titleColor: '#1a1d23',
+            bodyColor: '#4a5060',
+            padding: 10,
+            callbacks: { label: c => ` ${c.parsed.y.toFixed(1)} / 20` }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display:false },
+            ticks: { color:'#8a92a0', font:{ size:11, family:"'DM Mono', monospace" }, maxTicksLimit:8 },
+            border: { display:false }
+          },
+          y: {
+            min: 0, max: 20,
+            grid: { color:'rgba(0,0,0,0.04)' },
+            ticks: { color:'#8a92a0', font:{ size:11, family:"'DM Mono', monospace" }, stepSize:5, callback: v => v+'/20' },
+            border: { display:false }
+          }
+        }
+      }
+    });
+  }
+
+  // ── MODULE MASTERY — pure in-memory from progressData ─────────
+  function renderModuleMastery(progressData) {
+    const list = document.getElementById('mastery-list');
+
+    if (allModules.length === 0) {
+      list.innerHTML = `<div class="empty-state"><span class="empty-icon">📚</span>No modules yet.</div>`;
+      return;
+    }
+
+    // Count mastered per module from already-fetched progress rows
+    const masteredByModule = {};  // moduleId -> count of mastered question_ids
+    const seenByModule     = {};  // moduleId -> Set of all question_ids in progress
+
+    progressData.forEach(p => {
+      const mid = p.questions?.module_id;
+      if (!mid) return;
+      if (!seenByModule[mid]) seenByModule[mid] = new Set();
+      seenByModule[mid].add(p.question_id);
+      if ((p.times_correct||0) > 0) {
+        masteredByModule[mid] = (masteredByModule[mid]||0) + 1;
+      }
+    });
+
+    // We still need total question counts per module — but we can derive a
+    // rough count from attempts data (module question counts), OR just use
+    // seenByModule as denominator. Better: pull question counts from attempts.
+    // Actually the cleanest: compute "seen" as denominator (questions attempted),
+    // mastered as numerator. Shows real progress on attempted questions.
+    // For full total we'll use the module question count from attempts if available.
+    // Since we want accuracy, let's use seen count as the denominator.
+
+    list.innerHTML = allModules.map(mod => {
+      const mastered = masteredByModule[mod.id] || 0;
+      const seen     = seenByModule[mod.id]?.size || 0;
+      const pct      = seen > 0 ? Math.round((mastered / seen) * 100) : 0;
+
+      return `
+        <div class="mastery-item">
+          <div class="mastery-row">
+            <div class="mastery-name">
+              <span class="mastery-icon">${getIcon(mod.name)}</span>
+              ${mod.name}
+            </div>
+            <div class="mastery-pct">${seen > 0 ? pct+'%' : '—'}</div>
+          </div>
+          <div class="mastery-bar">
+            <div class="mastery-fill" style="width:${pct}%;"></div>
+          </div>
+          <div class="mastery-meta">${mastered} / ${seen} attempted questions mastered</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ── DIFFICULTY ACCURACY — pure in-memory ─────────────────────
+  function renderDiffAccuracy(progressData) {
+    const container = document.getElementById('diff-accuracy');
+    const tiers = { easy:{c:0,w:0}, medium:{c:0,w:0}, hard:{c:0,w:0} };
+
+    progressData.forEach(p => {
+      const diff = p.questions?.difficulty;
+      if (!tiers[diff]) return;
+      tiers[diff].c += p.times_correct||0;
+      tiers[diff].w += p.times_wrong||0;
+    });
+
+    container.innerHTML = [
+      { key:'easy',   label:'Easy',   emoji:'⬜', fillClass:'fill-easy',   color:'#0a9c6a' },
+      { key:'medium', label:'Medium', emoji:'🟡', fillClass:'fill-medium', color:'#b87800' },
+      { key:'hard',   label:'Hard',   emoji:'🔴', fillClass:'fill-hard',   color:'#c02040' },
+    ].map(r => {
+      const t   = tiers[r.key];
+      const tot = t.c + t.w;
+      const pct = tot > 0 ? Math.round((t.c/tot)*100) : 0;
+      return `
+        <div class="diff-acc-item">
+          <div class="diff-acc-top">
+            <div class="diff-acc-name" style="color:${r.color};">${r.emoji} ${r.label}</div>
+            <div class="diff-acc-val" style="color:${r.color};">${tot > 0 ? pct+'%' : '—'}</div>
+          </div>
+          <div class="diff-acc-bar">
+            <div class="diff-acc-fill ${r.fillClass}" style="width:${pct}%;"></div>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">${t.c} correct · ${t.w} wrong</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ── HEATMAP — pure in-memory ──────────────────────────────────
+  function renderHeatmap() {
+    const dayCount = {};
+    allAttempts.forEach(a => {
+      const day = new Date(a.completed_at).toISOString().split('T')[0];
+      dayCount[day] = (dayCount[day]||0) + 1;
+    });
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const startDate = new Date(today);
+    startDate.setDate(startDate.getDate() - 111);
+    startDate.setDate(startDate.getDate() - startDate.getDay()); // align to Sunday
+
+    const grid     = document.getElementById('heatmap');
+    const monthRow = document.getElementById('heatmap-months');
+    grid.innerHTML = monthRow.innerHTML = '';
+
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    let lastMonth = -1;
+    let cursor    = new Date(startDate);
+    const cols    = [];
+
+    while (cursor <= today) {
+      const wi = Math.floor(cols.length / 7);
+      if (!cols[wi]) cols[wi] = [];
+      cols[wi].push(new Date(cursor));
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    // pad last week
+    while (cols[cols.length-1]?.length < 7) cols[cols.length-1].push(null);
+
+    cols.forEach(week => {
+      const col   = document.createElement('div');
+      col.className = 'heatmap-col';
+      const label = document.createElement('div');
+      label.className = 'heatmap-month-label';
+      const firstReal = week.find(Boolean);
+      if (firstReal) {
+        const m = firstReal.getMonth();
+        if (m !== lastMonth) { label.textContent = months[m]; lastMonth = m; }
+      }
+      monthRow.appendChild(label);
+
+      week.forEach(day => {
+        const cell = document.createElement('div');
+        if (!day) { cell.className = 'heatmap-cell'; cell.style.opacity = '0'; }
+        else {
+          const key   = day.toISOString().split('T')[0];
+          const count = dayCount[key] || 0;
+          const lvl   = count === 0 ? '' : count === 1 ? 'level-1' : count === 2 ? 'level-2' : count === 3 ? 'level-3' : 'level-4';
+          cell.className = `heatmap-cell ${lvl}`.trim();
+          if (count > 0) cell.title = `${key}: ${count} quiz${count>1?'zes':''}`;
+          else cell.title = key;
+        }
+        col.appendChild(cell);
+      });
+      grid.appendChild(col);
+    });
+  }
+
+  // ── NEMESIS — pure in-memory ──────────────────────────────────
+  function renderNemesis(progressData) {
+    const list = document.getElementById('nemesis-list');
+
+    const nemesis = progressData
+      .filter(p => (p.times_wrong||0) >= 3)
+      .sort((a,b) => (b.times_wrong||0) - (a.times_wrong||0))
+      .slice(0, 5);
+
+    if (nemesis.length === 0) {
+      list.innerHTML = `<div class="empty-state"><span class="empty-icon">🎯</span>No nemesis questions yet. Keep studying!</div>`;
+      return;
+    }
+
+    list.innerHTML = nemesis.map((r, i) => {
+      const text  = r.questions?.text || '—';
+      const short = text.length > 70 ? text.slice(0,67)+'…' : text;
+      const chap  = r.questions?.chapters?.name || '—';
+      return `
+        <div class="nemesis-item">
+          <div class="nemesis-rank">#${i+1}</div>
+          <div class="nemesis-text">
+            <div class="nemesis-q">${short}</div>
+            <div class="nemesis-chapter">${chap}</div>
+          </div>
+          ${i === 0 ? '<span class="nemesis-badge">👿 Nemesis</span>' : ''}
+          <div class="nemesis-count">${r.times_wrong}✗</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ── SIDEBAR TOGGLE ────────────────────────────────────────────
+  function setupSidebarToggle() {
+    const saved = localStorage.getItem('sidebarCollapsed');
+    if (saved === 'true') {
+      document.getElementById('app-shell').classList.add('sidebar-collapsed');
+      document.getElementById('sidebar-toggle').textContent = '›';
+    }
+  }
+
+  window.toggleSidebar = function() {
+    const shell     = document.getElementById('app-shell');
+    const btn       = document.getElementById('sidebar-toggle');
+    const collapsed = shell.classList.toggle('sidebar-collapsed');
+    btn.textContent = collapsed ? '›' : '‹';
+    localStorage.setItem('sidebarCollapsed', collapsed);
+  };
+
+  window.handleSignOut = async function() { await signOut(); };
+
+  init().catch(console.error);
+</script>
+
+</body>
+</html>

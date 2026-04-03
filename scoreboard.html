@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedMCQ — Scoreboard</title>
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    /* ── SCOREBOARD PAGE STYLES ── */
+
+    .scoreboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .scoreboard-grid .full-width {
+      grid-column: 1 / -1;
+    }
+
+    /* ── BADGES SECTION ── */
+    .badges-wrap {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 14px;
+    }
+
+    .badge-card {
+      background: var(--surface);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+      transition: transform var(--t-med) var(--ease), box-shadow var(--t-med) var(--ease);
+    }
+
+    .badge-card.earned {
+      border-color: var(--border-cyan);
+      box-shadow: var(--shadow-md), 0 0 0 1px rgba(0,200,212,0.15);
+    }
+
+    .badge-card.earned:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg), var(--shadow-cyan);
+    }
+
+    .badge-card.locked {
+      opacity: 0.45;
+      filter: grayscale(0.6);
+    }
+
+    /* Shimmer on earned badges */
+    .badge-card.earned::before {
+      content: '';
+      position: absolute;
+      top: -60%; left: -60%;
+      width: 40%; height: 220%;
+      background: linear-gradient(
+        105deg,
+        transparent 40%,
+        rgba(255,255,255,0.18) 50%,
+        transparent 60%
+      );
+      transform: rotate(0deg);
+      animation: badgeShimmer 4s ease-in-out infinite;
+    }
+
+    @keyframes badgeShimmer {
+      0%   { left: -60%; }
+      30%, 100% { left: 160%; }
+    }
+
+    .badge-emoji {
+      font-size: 36px;
+      line-height: 1;
+      display: block;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.12));
+    }
+
+    .badge-card.locked .badge-emoji {
+      filter: grayscale(1) opacity(0.4);
+    }
+
+    .badge-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.2px;
+    }
+
+    .badge-condition {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .badge-earned-date {
+      font-size: 11px;
+      color: var(--cyan-dark);
+      font-family: 'DM Mono', monospace;
+      margin-top: auto;
+    }
+
+    .badge-locked-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: auto;
+    }
+
+    /* ── INSIGHTS ROW ── */
+    .insights-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .insight-card {
+      background: var(--surface);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px 22px;
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--t-med) var(--ease), box-shadow var(--t-med) var(--ease);
+    }
+
+    .insight-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .insight-icon {
+      font-size: 26px;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .insight-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 6px;
+    }
+
+    .insight-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+      line-height: 1.3;
+    }
+
+    .insight-value.cyan { color: var(--cyan-dark); }
+    .insight-value.pink { color: var(--pink-dark); }
+
+    .insight-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ── PERSONALITY CARD ── */
+    .personality-card {
+      background: linear-gradient(135deg,
+        rgba(0,200,212,0.08) 0%,
+        rgba(240,98,164,0.06) 100%
+      );
+      border: 1px solid var(--border-cyan);
+      border-radius: var(--radius-lg);
+      padding: 28px 28px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .personality-card::after {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 180px; height: 180px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,200,212,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .personality-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .personality-avatar {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--pink));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 4px 16px var(--cyan-glow);
+      flex-shrink: 0;
+    }
+
+    .personality-type {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+    }
+
+    .personality-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .personality-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .pstat {
+      text-align: center;
+      padding: 12px 8px;
+      background: rgba(255,255,255,0.5);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-soft);
+    }
+
+    .pstat-val {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--cyan-dark), var(--pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .pstat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* ── FUN STATS ── */
+    .fun-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .fun-stat {
+      background: var(--surface);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--t-fast);
+    }
+
+    .fun-stat:hover { transform: translateY(-2px); }
+
+    .fun-stat-icon { font-size: 20px; margin-bottom: 8px; display: block; }
+
+    .fun-stat-val {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+      line-height: 1;
+    }
+
+    .fun-stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Section heading */
+    .section-heading {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-heading::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-soft);
+    }
+
+    /* Badge count pill */
+    .badge-count-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: var(--cyan-wash);
+      border: 1px solid var(--border-cyan);
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--cyan-dark);
+    }
+
+    /* Empty badges state */
+    .no-badges-note {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 12px 0 4px;
+    }
+
+    @media (max-width: 900px) {
+      .scoreboard-grid { grid-template-columns: 1fr; }
+      .insights-row { grid-template-columns: 1fr 1fr; }
+      .personality-stats { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 600px) {
+      .insights-row { grid-template-columns: 1fr; }
+      .badges-wrap { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-shell" id="app-shell">
+
+  <!-- ── SIDEBAR ── -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-avatar" id="sidebar-avatar">?</div>
+      <span class="sidebar-name" id="sidebar-name">Loading…</span>
+    </div>
+    <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">‹</button>
+    <div class="sidebar-nav">
+      <a class="nav-item" href="./index.html" data-label="Dashboard">
+        <span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span>
+      </a>
+      <a class="nav-item" href="./modules.html" data-label="Modules">
+        <span class="nav-icon">📚</span><span class="nav-label">Modules</span>
+      </a>
+      <a class="nav-item" href="./progress.html" data-label="Progress">
+        <span class="nav-icon">📈</span><span class="nav-label">Progress</span>
+      </a>
+      <a class="nav-item active" href="./scoreboard.html" data-label="Scoreboard">
+        <span class="nav-icon">🏆</span><span class="nav-label">Scoreboard</span>
+      </a>
+      <a class="nav-item" href="./profile.html" data-label="Profile">
+        <span class="nav-icon">👤</span><span class="nav-label">Profile</span>
+      </a>
+    </div>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="handleSignOut()">
+        <span class="nav-icon">🚪</span><span>Sign Out</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ── MAIN CONTENT ── -->
+  <main class="main-content">
+
+    <!-- Page header -->
+    <div class="page-header animate-in">
+      <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:12px;">
+        <div>
+          <div class="page-title">Scoreboard</div>
+          <div class="page-subtitle">Your badges, insights, and academic personality.</div>
+        </div>
+        <div class="badge-count-pill" id="badge-count-pill">
+          <span>🏅</span>
+          <span id="badge-count-text">0 / 7 badges</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="scoreboard-grid">
+
+      <!-- ── PERSONALITY CARD (full width) ── -->
+      <div class="full-width animate-in stagger-1">
+        <div class="section-heading">Academic Personality</div>
+        <div class="personality-card" id="personality-card">
+          <div class="personality-header">
+            <div class="personality-avatar" id="personality-avatar">🧠</div>
+            <div>
+              <div class="personality-type" id="personality-type">
+                <div class="skeleton" style="width:160px;height:24px;border-radius:6px;"></div>
+              </div>
+              <div class="personality-subtitle" id="personality-subtitle">
+                <div class="skeleton" style="width:220px;height:14px;border-radius:4px;margin-top:6px;"></div>
+              </div>
+            </div>
+          </div>
+          <div class="personality-stats">
+            <div class="pstat">
+              <div class="pstat-val" id="pstat-attempts">—</div>
+              <div class="pstat-label">Total Attempts</div>
+            </div>
+            <div class="pstat">
+              <div class="pstat-val" id="pstat-avg">—</div>
+              <div class="pstat-label">Avg Score /20</div>
+            </div>
+            <div class="pstat">
+              <div class="pstat-val" id="pstat-best">—</div>
+              <div class="pstat-label">Best Score</div>
+            </div>
+            <div class="pstat">
+              <div class="pstat-val" id="pstat-badges">—</div>
+              <div class="pstat-label">Badges</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── INSIGHTS (full width) ── -->
+      <div class="full-width animate-in stagger-2">
+        <div class="section-heading">Insights</div>
+        <div class="insights-row" id="insights-row">
+          <div class="insight-card">
+            <span class="insight-icon">💪</span>
+            <div class="insight-label">Strongest Module</div>
+            <div class="insight-value cyan" id="insight-strongest">
+              <div class="skeleton" style="height:16px;width:120px;border-radius:4px;"></div>
+            </div>
+            <div class="insight-sub" id="insight-strongest-sub">—</div>
+          </div>
+          <div class="insight-card">
+            <span class="insight-icon">👿</span>
+            <div class="insight-label">Nemesis Chapter</div>
+            <div class="insight-value pink" id="insight-nemesis">
+              <div class="skeleton" style="height:16px;width:120px;border-radius:4px;"></div>
+            </div>
+            <div class="insight-sub" id="insight-nemesis-sub">—</div>
+          </div>
+          <div class="insight-card">
+            <span class="insight-icon">🔥</span>
+            <div class="insight-label">Study Streak</div>
+            <div class="insight-value cyan" id="insight-streak">—</div>
+            <div class="insight-sub">consecutive days</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── BADGES (full width) ── -->
+      <div class="full-width animate-in stagger-3">
+        <div class="section-heading">Badges</div>
+        <div class="badges-wrap" id="badges-wrap">
+          <!-- Skeleton -->
+          <div class="skeleton" style="height:160px;border-radius:20px;"></div>
+          <div class="skeleton stagger-1" style="height:160px;border-radius:20px;"></div>
+          <div class="skeleton stagger-2" style="height:160px;border-radius:20px;"></div>
+          <div class="skeleton stagger-3" style="height:160px;border-radius:20px;"></div>
+          <div class="skeleton stagger-4" style="height:160px;border-radius:20px;"></div>
+          <div class="skeleton stagger-5" style="height:160px;border-radius:20px;"></div>
+          <div class="skeleton" style="height:160px;border-radius:20px;animation-delay:360ms;"></div>
+        </div>
+      </div>
+
+      <!-- ── FUN STATS (full width) ── -->
+      <div class="full-width animate-in stagger-4">
+        <div class="section-heading">Fun Stats</div>
+        <div class="fun-stats-grid" id="fun-stats-grid">
+          <div class="skeleton" style="height:88px;border-radius:14px;"></div>
+          <div class="skeleton stagger-1" style="height:88px;border-radius:14px;"></div>
+          <div class="skeleton stagger-2" style="height:88px;border-radius:14px;"></div>
+          <div class="skeleton stagger-3" style="height:88px;border-radius:14px;"></div>
+          <div class="skeleton stagger-4" style="height:88px;border-radius:14px;"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script type="module">
+  import {
+    requireAuth,
+    getCurrentProfile,
+    getUserBadges,
+    getUserAttempts,
+    signOut,
+    supabase
+  } from './js/supabase.js';
+
+  // ── All 7 badge definitions ────────────────────────────────────
+  const ALL_BADGES = [
+    {
+      key: 'big_brain',
+      emoji: '🧠',
+      name: 'Big Brain',
+      condition: 'Score 90%+ on Hard mode'
+    },
+    {
+      key: 'perfectionist',
+      emoji: '✨',
+      name: 'Perfectionist',
+      condition: '100% on any quiz'
+    },
+    {
+      key: 'survivor',
+      emoji: '💀',
+      name: 'Survivor',
+      condition: 'Score below 30%, then bounce back above 80% same module'
+    },
+    {
+      key: 'redemption_arc',
+      emoji: '📈',
+      name: 'Redemption Arc',
+      condition: 'Redo score is 30%+ higher than original attempt'
+    },
+    {
+      key: 'module_master',
+      emoji: '🎓',
+      name: 'Module Master',
+      condition: 'Every question in a module answered correctly at least once'
+    },
+    {
+      key: 'speedrun',
+      emoji: '⚡',
+      name: 'Speedrun',
+      condition: 'Complete Hard mode with 10+ minutes remaining'
+    },
+    {
+      key: 'grinder',
+      emoji: '⚙️',
+      name: 'Grinder',
+      condition: '100 total attempts across all modules'
+    }
+  ];
+
+  // ── Personality types based on stats ──────────────────────────
+  function getPersonalityType(avgScore, totalAttempts, badgeCount) {
+    if (avgScore >= 17)    return { type: 'The Attending', emoji: '👨‍⚕️', sub: 'Consistently excellent. The rest of us hate you (respectfully).' };
+    if (avgScore >= 14)    return { type: 'The Resident', emoji: '🥼', sub: 'Strong foundation. Almost ready for the real thing.' };
+    if (avgScore >= 11)    return { type: 'The Intern', emoji: '📋', sub: 'Getting there. Keep grinding.' };
+    if (avgScore >= 8)     return { type: 'The Med Student', emoji: '📚', sub: 'Stressed, tired, but still showing up. Respect.' };
+    if (totalAttempts > 20) return { type: 'The Grinder', emoji: '⚙️', sub: 'Quantity over quality right now. The quality will come.' };
+    return                        { type: 'The Beginner', emoji: '🌱', sub: 'Everyone starts somewhere. Keep going.' };
+  }
+
+  // ── State ──────────────────────────────────────────────────────
+  let currentUser    = null;
+  let currentProfile = null;
+  let earnedBadges   = [];
+  let allAttempts    = [];
+
+  // ── Boot ───────────────────────────────────────────────────────
+  async function init() {
+    currentUser    = await requireAuth();
+    if (!currentUser) return;
+    currentProfile = await getCurrentProfile();
+
+    renderSidebar();
+    setupSidebarToggle();
+    
+
+    // Load in parallel
+    const [badges, attempts] = await Promise.all([
+      getUserBadges(currentUser.id),
+      getUserAttempts(currentUser.id)
+    ]);
+
+    earnedBadges = badges;
+    allAttempts  = attempts;
+
+    renderPersonality();
+    renderInsights();
+    renderBadges();
+    renderFunStats();
+  }
+
+  // ── Sidebar ────────────────────────────────────────────────────
+  function renderSidebar() {
+    const name     = currentProfile?.name || currentUser.email;
+    const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
+    document.getElementById('sidebar-avatar').textContent = initials;
+    document.getElementById('sidebar-name').textContent   = name;
+  }
+
+  // ── Personality card ───────────────────────────────────────────
+  function renderPersonality() {
+    const totalAttempts = allAttempts.length;
+    const avgScore = totalAttempts > 0
+      ? allAttempts.reduce((s, a) => s + (a.score_20 || 0), 0) / totalAttempts
+      : 0;
+    const bestScore = totalAttempts > 0
+      ? Math.max(...allAttempts.map(a => a.score_20 || 0))
+      : 0;
+
+    const personality = getPersonalityType(avgScore, totalAttempts, earnedBadges.length);
+
+    document.getElementById('personality-avatar').textContent = personality.emoji;
+    document.getElementById('personality-type').textContent   = personality.type;
+    document.getElementById('personality-subtitle').textContent = personality.sub;
+
+    document.getElementById('pstat-attempts').textContent = totalAttempts;
+    document.getElementById('pstat-avg').textContent      = avgScore.toFixed(1);
+    document.getElementById('pstat-best').textContent     = bestScore.toFixed(1);
+    document.getElementById('pstat-badges').textContent   = earnedBadges.length;
+
+    document.getElementById('badge-count-text').textContent =
+      `${earnedBadges.length} / 7 badges`;
+  }
+
+  // ── Insights ───────────────────────────────────────────────────
+  async function renderInsights() {
+    // Strongest module — highest avg score_20
+    if (allAttempts.length > 0) {
+      const moduleScores = {};
+      allAttempts.forEach(a => {
+        if (!a.module_id) return;
+        if (!moduleScores[a.module_id]) moduleScores[a.module_id] = { sum: 0, count: 0, name: a.modules?.name || 'Unknown' };
+        moduleScores[a.module_id].sum   += a.score_20 || 0;
+        moduleScores[a.module_id].count += 1;
+      });
+
+      let strongestId = null, strongestAvg = -1;
+      for (const [id, data] of Object.entries(moduleScores)) {
+        const avg = data.sum / data.count;
+        if (avg > strongestAvg) { strongestAvg = avg; strongestId = id; }
+      }
+
+      if (strongestId) {
+        document.getElementById('insight-strongest').textContent =
+          moduleScores[strongestId].name;
+        document.getElementById('insight-strongest-sub').textContent =
+          `avg ${strongestAvg.toFixed(1)} / 20`;
+      }
+    } else {
+      document.getElementById('insight-strongest').textContent = 'No data yet';
+      document.getElementById('insight-strongest-sub').textContent = 'Complete some quizzes first';
+    }
+
+    // Nemesis chapter — most failed questions (wrong 3+ times)
+    const { data: nemesisData } = await supabase
+      .from('question_progress')
+      .select('question_id, times_wrong, questions(chapter_id, chapters(name))')
+      .eq('user_id', currentUser.id)
+      .gte('times_wrong', 3)
+      .order('times_wrong', { ascending: false })
+      .limit(1);
+
+    if (nemesisData && nemesisData.length > 0) {
+      const chapterName = nemesisData[0]?.questions?.chapters?.name || 'Unknown';
+      document.getElementById('insight-nemesis').textContent = chapterName;
+      document.getElementById('insight-nemesis-sub').textContent =
+        `${nemesisData[0].times_wrong}× wrong on top question`;
+    } else {
+      document.getElementById('insight-nemesis').textContent = 'No nemesis yet 😇';
+      document.getElementById('insight-nemesis-sub').textContent = 'Keep studying to find your weakness';
+    }
+
+    // Streak — consecutive days with at least one attempt
+    const streak = calcStreak(allAttempts);
+    document.getElementById('insight-streak').textContent = streak;
+  }
+
+  function calcStreak(attempts) {
+    if (attempts.length === 0) return 0;
+    const days = new Set(
+      attempts.map(a => new Date(a.completed_at).toISOString().split('T')[0])
+    );
+    const sorted = [...days].sort().reverse();
+    let streak = 0;
+    let cursor = new Date();
+    cursor.setHours(0,0,0,0);
+
+    for (let i = 0; i < 365; i++) {
+      const key = cursor.toISOString().split('T')[0];
+      if (days.has(key)) {
+        streak++;
+        cursor.setDate(cursor.getDate() - 1);
+      } else if (i === 0) {
+        // didn't study today — check yesterday
+        cursor.setDate(cursor.getDate() - 1);
+        continue;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }
+
+  // ── Badges ─────────────────────────────────────────────────────
+  function renderBadges() {
+    const earnedKeys = new Set(earnedBadges.map(b => b.badge_key));
+    const wrap = document.getElementById('badges-wrap');
+    wrap.innerHTML = '';
+
+    ALL_BADGES.forEach(badge => {
+      const isEarned = earnedKeys.has(badge.key);
+      const earnedRecord = earnedBadges.find(b => b.badge_key === badge.key);
+
+      const card = document.createElement('div');
+      card.className = `badge-card ${isEarned ? 'earned' : 'locked'}`;
+
+      card.innerHTML = `
+        <span class="badge-emoji">${badge.emoji}</span>
+        <div class="badge-name">${badge.name}</div>
+        <div class="badge-condition">${badge.condition}</div>
+        ${isEarned
+          ? `<div class="badge-earned-date">Earned ${formatDate(earnedRecord?.earned_at)}</div>`
+          : `<div class="badge-locked-label">🔒 Not yet earned</div>`
+        }
+      `;
+
+      wrap.appendChild(card);
+    });
+
+    const earnedCount = earnedKeys.size;
+    if (earnedCount === 0) {
+      const note = document.createElement('div');
+      note.className = 'no-badges-note full-width';
+      note.style.gridColumn = '1 / -1';
+      note.textContent = 'No badges yet — complete quizzes to start earning them.';
+      // don't replace, just let locked cards show
+    }
+  }
+
+  // ── Fun stats ──────────────────────────────────────────────────
+  function renderFunStats() {
+    const total   = allAttempts.length;
+    const easyQ   = allAttempts.filter(a => a.mode === 'easy').length;
+    const hardQ   = allAttempts.filter(a => a.mode === 'hard').length;
+    const totalTime = allAttempts.reduce((s, a) => s + (a.time_used || 0), 0);
+    const totalMins = Math.round(totalTime / 60);
+
+    // Questions answered
+    const totalQAnswered = allAttempts.reduce((s, a) => {
+      return s + (Array.isArray(a.answers) ? a.answers.length : 0);
+    }, 0);
+
+    // Perfect scores
+    const perfects = allAttempts.filter(a => (a.score_pct || 0) >= 100).length;
+
+    const stats = [
+      { icon: '📝', val: total,          label: 'Total quizzes' },
+      { icon: '⏱',  val: `${totalMins}m`, label: 'Total study time' },
+      { icon: '❓',  val: totalQAnswered, label: 'Questions answered' },
+      { icon: '🔥',  val: hardQ,          label: 'Hard mode quizzes' },
+      { icon: '💯',  val: perfects,       label: 'Perfect scores' },
+    ];
+
+    const grid = document.getElementById('fun-stats-grid');
+    grid.innerHTML = '';
+
+    stats.forEach((s, i) => {
+      const el = document.createElement('div');
+      el.className = `fun-stat animate-in`;
+      el.style.animationDelay = `${i * 50}ms`;
+      el.innerHTML = `
+        <span class="fun-stat-icon">${s.icon}</span>
+        <div class="fun-stat-val">${s.val}</div>
+        <div class="fun-stat-label">${s.label}</div>
+      `;
+      grid.appendChild(el);
+    });
+  }
+
+  // ── Utils ──────────────────────────────────────────────────────
+  function formatDate(iso) {
+    if (!iso) return '';
+    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  // ── Sidebar toggle ─────────────────────────────────────────────
+  function setupSidebarToggle() {
+    const saved = localStorage.getItem('sidebarCollapsed');
+    if (saved === 'true') {
+      document.getElementById('app-shell').classList.add('sidebar-collapsed');
+      document.getElementById('sidebar-toggle').textContent = '›';
+    }
+  }
+
+  window.toggleSidebar = function() {
+    const shell     = document.getElementById('app-shell');
+    const btn       = document.getElementById('sidebar-toggle');
+    const collapsed = shell.classList.toggle('sidebar-collapsed');
+    btn.textContent = collapsed ? '›' : '‹';
+    localStorage.setItem('sidebarCollapsed', collapsed);
+  };
+
+  window.handleSignOut = async function() { await signOut(); };
+
+  init().catch(console.error);
+</script>
+
+</body>
+</html>

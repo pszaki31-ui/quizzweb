@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedMCQ — Dashboard</title>
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+
+    /* ══════════════════════════════════════════════
+       DASHBOARD — Extra polish layer
+       ══════════════════════════════════════════════ */
+
+    /* ── HERO HEADER ── */
+    .dash-hero {
+      position: relative;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, #0d1117 0%, #0d2330 50%, #1a0d20 100%);
+      padding: 36px 36px 32px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* Animated background orbs inside hero */
+    .hero-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      pointer-events: none;
+    }
+
+    .hero-orb-1 {
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(0,200,212,0.35) 0%, transparent 70%);
+      top: -80px; right: -40px;
+      animation: heroOrbFloat 8s ease-in-out infinite;
+    }
+
+    .hero-orb-2 {
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(240,98,164,0.3) 0%, transparent 70%);
+      bottom: -60px; left: 30%;
+      animation: heroOrbFloat 6s ease-in-out infinite reverse;
+    }
+
+    .hero-orb-3 {
+      width: 150px; height: 150px;
+      background: radial-gradient(circle, rgba(0,200,212,0.2) 0%, transparent 70%);
+      top: 20%; left: -30px;
+      animation: heroOrbFloat 10s ease-in-out infinite;
+    }
+
+    @keyframes heroOrbFloat {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33%       { transform: translate(15px, -10px) scale(1.05); }
+      66%       { transform: translate(-10px, 8px) scale(0.97); }
+    }
+
+    /* Grid texture on hero */
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .hero-left {}
+
+    .hero-greeting {
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .hero-name {
+      font-size: clamp(26px, 3vw, 38px);
+      font-weight: 700;
+      color: white;
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+
+    .hero-name .grad {
+      background: linear-gradient(90deg, #00c8d4, #f062a4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Brain health bar */
+    .brain-health-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .brain-health-label {
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .brain-bar-outer {
+      flex: 1;
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 999px;
+      overflow: hidden;
+      max-width: 200px;
+    }
+
+    .brain-bar-inner {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 1.2s var(--ease-out);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .brain-bar-inner::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      animation: barSheen 2.5s ease-in-out infinite;
+    }
+
+    @keyframes barSheen {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(200%); }
+    }
+
+    .brain-health-pct {
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'DM Mono', monospace;
+      color: rgba(255,255,255,0.7);
+    }
+
+    /* Streak badge in hero */
+    .streak-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.7);
+      margin-top: 8px;
+    }
+
+    .streak-badge strong {
+      color: white;
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* Hero right — quick stats */
+    .hero-stats {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .hero-stat {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      text-align: center;
+      min-width: 80px;
+      backdrop-filter: blur(10px);
+      transition: background var(--t-fast), border-color var(--t-fast);
+    }
+
+    .hero-stat:hover {
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(0,200,212,0.4);
+    }
+
+    .hero-stat-val {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -1.5px;
+      line-height: 1;
+      color: white;
+      margin-bottom: 4px;
+    }
+
+    .hero-stat-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.45);
+      font-weight: 500;
+    }
+
+    /* ── SECTION LABEL ── */
+    .section-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-soft);
+    }
+
+    /* ── DASHBOARD GRID ── */
+    .dash-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+    }
+
+    .dash-grid .span-2 { grid-column: span 2; }
+    .dash-grid .span-3 { grid-column: span 3; }
+
+    /* ── MISSION CARD ── */
+    .mission-card {
+      background: var(--surface);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      transition: transform var(--t-med) var(--ease), box-shadow var(--t-med) var(--ease);
+    }
+
+    .mission-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg), var(--shadow-cyan);
+    }
+
+    /* Decorative corner accent */
+    .mission-card::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 120px; height: 120px;
+      background: radial-gradient(circle at top right, rgba(0,200,212,0.12), transparent 70%);
+      pointer-events: none;
+    }
+
+    .mission-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: var(--cyan-wash);
+      border: 1px solid var(--border-cyan);
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--cyan-dark);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 14px;
+    }
+
+    .mission-tag-dot {
+      width: 5px; height: 5px;
+      background: var(--cyan);
+      border-radius: 50%;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .mission-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.4px;
+      margin-bottom: 6px;
+    }
+
+    .mission-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .mission-due-count {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -2px;
+      line-height: 1;
+      background: linear-gradient(135deg, var(--cyan-dark), var(--pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 4px;
+    }
+
+    .mission-due-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    .start-study-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--cyan) 0%, var(--cyan-dark) 100%);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      box-shadow: 0 4px 20px var(--cyan-glow);
+      transition: all var(--t-fast) var(--ease);
+      position: relative;
+      overflow: hidden;
+      text-decoration: none;
+    }
+
+    .start-study-btn::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      transition: left 0.4s ease;
+    }
+
+    .start-study-btn:hover::before { left: 100%; }
+    .start-study-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 28px rgba(0,200,212,0.45);
+      color: white;
+    }
+
+    /* Caught up state */
+    .caught-up {
+      text-align: center;
+      padding: 8px 0 16px;
+    }
+
+    .caught-up-icon {
+      font-size: 36px;
+      display: block;
+      margin-bottom: 8px;
+      animation: bounce 2s ease-in-out infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    /* ── LAST SESSIONS ── */
+    .sessions-card {
+      background: var(--surface);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: 22px;
+      overflow: hidden;
+    }
+
+    .session-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-soft);
+      transition: transform var(--t-fast);
+      cursor: default;
+    }
+
+    .session-item:last-child { border-bottom: none; }
+    .session-item:hover { transform: translateX(4px); }
+
+    .session-icon {
+      width: 40px; height: 40px;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .session-icon.easy { background: rgba(16,201,138,0.1); border: 1px solid rgba(16,201,138,0.2); }
+    .session-icon.hard { background: var(--pink-wash); border: 1px solid rgba(240,98,164,0.2); }
+
+    .session-info { flex: 1; min-width: 0; }
+
+    .session-module {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .session-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .session-score {
+      font-family: 'DM Mono', monospace;
+      font-size: 15px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .session-score.high { color: #0a9c6a; }
+    .session-score.mid  { color: #b87800; }
+    .session-score.low  { color: #c02040; }
+
+    /* ── WEAK SPOTS ── */
+    .weak-card {
+      background: var(--surface);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: 22px;
+    }
+
+    .weak-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      border-radius: var(--radius-sm);
+      background: rgba(240,64,96,0.04);
+      border: 1px solid rgba(240,64,96,0.1);
+      margin-bottom: 8px;
+      transition: all var(--t-fast);
+      cursor: default;
+    }
+
+    .weak-item:last-child { margin-bottom: 0; }
+
+    .weak-item:hover {
+      background: rgba(240,64,96,0.08);
+      border-color: rgba(240,64,96,0.2);
+      transform: translateX(4px);
+    }
+
+    .weak-rank {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: rgba(240,64,96,0.12);
+      border: 1px solid rgba(240,64,96,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: #c02040;
+      flex-shrink: 0;
+    }
+
+    .weak-text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .weak-question {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .weak-chapter {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .weak-wrong-count {
+      font-size: 11px;
+      font-weight: 600;
+      color: #c02040;
+      font-family: 'DM Mono', monospace;
+      flex-shrink: 0;
+      background: rgba(240,64,96,0.08);
+      padding: 2px 7px;
+      border-radius: 999px;
+    }
+
+    /* ── MODULE CARDS SLIDER ── */
+    .modules-section {
+      margin-top: 4px;
+    }
+
+    .modules-slider-wrap {
+      position: relative;
+    }
+
+    .modules-slider {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .modules-slider::-webkit-scrollbar { display: none; }
+
+    .module-slide-card {
+      flex-shrink: 0;
+      width: 200px;
+      scroll-snap-align: start;
+      background: var(--surface);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      padding: 20px;
+      cursor: pointer;
+      transition: all var(--t-med) var(--ease);
+      text-decoration: none;
+      display: block;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .module-slide-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--cyan), var(--pink));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform var(--t-med) var(--ease);
+    }
+
+    .module-slide-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg), var(--shadow-cyan);
+      border-color: var(--border-cyan);
+    }
+
+    .module-slide-card:hover::after {
+      transform: scaleX(1);
+    }
+
+    .module-slide-icon {
+      font-size: 28px;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .module-slide-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+      margin-bottom: 12px;
+    }
+
+    /* Mini ring for module card */
+    .module-slide-ring {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .module-slide-pct {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--cyan-dark);
+    }
+
+    .module-slide-label {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Slider nav arrows */
+    .slider-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--surface-solid);
+      border: 1px solid var(--border-soft);
+      box-shadow: var(--shadow-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      cursor: pointer;
+      z-index: 10;
+      transition: all var(--t-fast);
+      color: var(--text-secondary);
+    }
+
+    .slider-arrow:hover {
+      background: var(--cyan);
+      color: white;
+      border-color: var(--cyan);
+    }
+
+    .slider-arrow.left  { left: -14px; }
+    .slider-arrow.right { right: -14px; }
+
+    /* ── EMPTY STATES ── */
+    .empty-mini {
+      text-align: center;
+      padding: 24px 16px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .empty-mini-icon {
+      font-size: 28px;
+      display: block;
+      margin-bottom: 8px;
+      opacity: 0.4;
+    }
+
+    /* ── CARD HEADERS ── */
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.2px;
+    }
+
+    .card-link {
+      font-size: 12px;
+      color: var(--cyan-dark);
+      font-weight: 500;
+      transition: opacity var(--t-fast);
+    }
+
+    .card-link:hover { opacity: 0.7; }
+
+    /* ── STAGGER ANIMATIONS ── */
+    .slide-in {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: slideInUp 0.5s var(--ease-out) forwards;
+    }
+
+    @keyframes slideInUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .slide-in-1  { animation-delay: 0ms; }
+    .slide-in-2  { animation-delay: 80ms; }
+    .slide-in-3  { animation-delay: 160ms; }
+    .slide-in-4  { animation-delay: 240ms; }
+    .slide-in-5  { animation-delay: 320ms; }
+
+    /* Number count-up animation */
+    .count-up {
+      display: inline-block;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1024px) {
+      .dash-grid { grid-template-columns: 1fr 1fr; }
+      .dash-grid .span-2 { grid-column: span 2; }
+      .dash-grid .span-3 { grid-column: span 2; }
+    }
+
+    @media (max-width: 700px) {
+      .dash-grid { grid-template-columns: 1fr; }
+      .dash-grid .span-2,
+      .dash-grid .span-3 { grid-column: span 1; }
+      .hero-stats { display: none; }
+      .dash-hero { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-shell" id="app-shell">
+
+  <!-- ── SIDEBAR ── -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-avatar" id="sidebar-avatar">?</div>
+      <span class="sidebar-name" id="sidebar-name">Loading…</span>
+    </div>
+    <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">‹</button>
+    <div class="sidebar-nav">
+      <a class="nav-item active" href="./index.html" data-label="Dashboard">
+        <span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span>
+      </a>
+      <a class="nav-item" href="./modules.html" data-label="Modules">
+        <span class="nav-icon">📚</span><span class="nav-label">Modules</span>
+      </a>
+      <a class="nav-item" href="./progress.html" data-label="Progress">
+        <span class="nav-icon">📈</span><span class="nav-label">Progress</span>
+      </a>
+      <a class="nav-item" href="./scoreboard.html" data-label="Scoreboard">
+        <span class="nav-icon">🏆</span><span class="nav-label">Scoreboard</span>
+      </a>
+      <a class="nav-item" href="./profile.html" data-label="Profile">
+        <span class="nav-icon">👤</span><span class="nav-label">Profile</span>
+      </a>
+    </div>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="handleSignOut()">
+        <span class="nav-icon">🚪</span><span>Sign Out</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ── MAIN CONTENT ── -->
+  <main class="main-content">
+
+    <!-- ── HERO ── -->
+    <div class="dash-hero slide-in slide-in-1">
+      <div class="hero-orb hero-orb-1"></div>
+      <div class="hero-orb hero-orb-2"></div>
+      <div class="hero-orb hero-orb-3"></div>
+      <div class="hero-grid"></div>
+
+      <div class="hero-content">
+        <div class="hero-left">
+          <div class="hero-greeting" id="hero-greeting">Good morning</div>
+          <div class="hero-name">
+            Hey, <span class="grad" id="hero-name">Doctor 👋</span>
+          </div>
+
+          <!-- Brain health -->
+          <div class="brain-health-wrap">
+            <div class="brain-health-label">
+              🧠 Brain health
+            </div>
+            <div class="brain-bar-outer">
+              <div class="brain-bar-inner" id="brain-bar" style="width:0%;"></div>
+            </div>
+            <div class="brain-health-pct" id="brain-pct">—%</div>
+          </div>
+
+          <div class="streak-badge">
+            🔥 Streak: <strong id="hero-streak">0</strong> days
+          </div>
+        </div>
+
+        <!-- Quick stats -->
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="hero-stat-val count-up" id="qs-attempts">0</div>
+            <div class="hero-stat-label">Quizzes</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-val count-up" id="qs-avg">—</div>
+            <div class="hero-stat-label">Avg /20</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-val count-up" id="qs-best">—</div>
+            <div class="hero-stat-label">Best</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-val count-up" id="qs-badges">0</div>
+            <div class="hero-stat-label">Badges</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DASHBOARD GRID ── -->
+    <div class="dash-grid">
+
+      <!-- ── TODAY'S MISSION ── -->
+      <div class="slide-in slide-in-2">
+        <div class="section-label">Today's Mission</div>
+        <div class="mission-card" id="mission-card">
+          <div class="mission-tag">
+            <span class="mission-tag-dot"></span>
+            Spaced Repetition
+          </div>
+          <div id="mission-content">
+            <!-- Skeleton -->
+            <div class="skeleton" style="height:48px;width:80px;border-radius:8px;margin-bottom:6px;"></div>
+            <div class="skeleton" style="height:14px;width:160px;border-radius:4px;margin-bottom:20px;"></div>
+            <div class="skeleton" style="height:48px;border-radius:12px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── LAST 3 SESSIONS ── -->
+      <div class="slide-in slide-in-3">
+        <div class="section-label">Recent Sessions</div>
+        <div class="sessions-card">
+          <div class="card-header">
+            <div class="card-title">Last 3 attempts</div>
+            <a class="card-link" href="./profile.html">View all →</a>
+          </div>
+          <div id="sessions-list">
+            <div class="skeleton" style="height:56px;border-radius:8px;margin-bottom:8px;"></div>
+            <div class="skeleton stagger-1" style="height:56px;border-radius:8px;margin-bottom:8px;"></div>
+            <div class="skeleton stagger-2" style="height:56px;border-radius:8px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── WEAK SPOTS ── -->
+      <div class="slide-in slide-in-4">
+        <div class="section-label">Weak Spots</div>
+        <div class="weak-card">
+          <div class="card-header">
+            <div class="card-title">Most failed questions</div>
+            <a class="card-link" href="./progress.html">Details →</a>
+          </div>
+          <div id="weak-list">
+            <div class="skeleton" style="height:52px;border-radius:8px;margin-bottom:8px;"></div>
+            <div class="skeleton stagger-1" style="height:52px;border-radius:8px;margin-bottom:8px;"></div>
+            <div class="skeleton stagger-2" style="height:52px;border-radius:8px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── MODULE PROGRESS SLIDER (full width) ── -->
+      <div class="span-3 slide-in slide-in-5">
+        <div class="section-label">Modules</div>
+        <div class="modules-slider-wrap" id="slider-wrap">
+          <button class="slider-arrow left" onclick="slideModules(-1)">‹</button>
+          <div class="modules-slider" id="modules-slider">
+            <div class="skeleton" style="width:200px;height:140px;border-radius:20px;flex-shrink:0;"></div>
+            <div class="skeleton stagger-1" style="width:200px;height:140px;border-radius:20px;flex-shrink:0;"></div>
+            <div class="skeleton stagger-2" style="width:200px;height:140px;border-radius:20px;flex-shrink:0;"></div>
+            <div class="skeleton stagger-3" style="width:200px;height:140px;border-radius:20px;flex-shrink:0;"></div>
+          </div>
+          <button class="slider-arrow right" onclick="slideModules(1)">›</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script type="module">
+  import {
+    supabase,
+    requireAuth,
+    getCurrentProfile,
+    getUserAttempts,
+    getUserBadges,
+    getModules,
+    calcBrainHealth,
+    signOut,
+  } from './js/supabase.js';
+
+  const moduleIcons = {
+    anatomy: '🦴', physiology: '❤️', biochemistry: '🧪',
+    pharmacology: '💊', pathology: '🔬', microbiology: '🦠',
+    immunology: '🛡️', neuroscience: '🧠', cardiology: '🫀',
+    respiratory: '🫁', default: '📖'
+  };
+
+  function getModuleIcon(name) {
+    const key = name.toLowerCase();
+    for (const [k, v] of Object.entries(moduleIcons)) {
+      if (key.includes(k)) return v;
+    }
+    return moduleIcons.default;
+  }
+
+  // ── State ──────────────────────────────────────────────────────
+  let currentUser    = null;
+  let currentProfile = null;
+  let allAttempts    = [];
+  let allBadges      = [];
+  let allModules     = [];
+
+  // ── Boot ───────────────────────────────────────────────────────
+  async function init() {
+    currentUser    = await requireAuth();
+    if (!currentUser) return;
+    currentProfile = await getCurrentProfile();
+
+    renderSidebar();
+    setupSidebarToggle();
+    setGreeting();
+
+    // Load everything in parallel
+    const [attempts, badges, modules] = await Promise.all([
+      getUserAttempts(currentUser.id),
+      getUserBadges(currentUser.id),
+      getModules()
+    ]);
+
+    allAttempts = attempts;
+    allBadges   = badges;
+    allModules  = modules;
+
+    renderHero();
+    renderMission();
+    renderSessions();
+    renderWeakSpots();
+    renderModulesSlider();
+  }
+
+  // ── Sidebar ────────────────────────────────────────────────────
+  function renderSidebar() {
+    const name     = currentProfile?.name || currentUser.email;
+    const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
+    document.getElementById('sidebar-avatar').textContent = initials;
+    document.getElementById('sidebar-name').textContent   = name;
+  }
+
+  // ── Greeting ───────────────────────────────────────────────────
+  function setGreeting() {
+    const h = new Date().getHours();
+    const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+    document.getElementById('hero-greeting').textContent = greet;
+  }
+
+  // ── Hero ───────────────────────────────────────────────────────
+  function renderHero() {
+    const name = currentProfile?.name?.split(' ')[0] || 'Doctor';
+    document.getElementById('hero-name').textContent = name + ' 👋';
+
+    // Brain health
+    const brainHealth = calcBrainHealth(currentProfile?.last_active);
+    const bar = document.getElementById('brain-bar');
+    const pct = document.getElementById('brain-pct');
+
+    // Color based on health
+    let barColor;
+    if (brainHealth >= 60) barColor = 'linear-gradient(90deg, #10c98a, #00c8d4)';
+    else if (brainHealth >= 30) barColor = 'linear-gradient(90deg, #f5a623, #f062a4)';
+    else barColor = 'linear-gradient(90deg, #f04060, #f5a623)';
+
+    setTimeout(() => {
+      bar.style.width = brainHealth + '%';
+      bar.style.background = barColor;
+    }, 400);
+
+    pct.textContent = brainHealth + '%';
+
+    // Stats
+    const totalAttempts = allAttempts.length;
+    const avgScore = totalAttempts > 0
+      ? (allAttempts.reduce((s, a) => s + (a.score_20 || 0), 0) / totalAttempts).toFixed(1)
+      : '—';
+    const bestScore = totalAttempts > 0
+      ? Math.max(...allAttempts.map(a => a.score_20 || 0)).toFixed(1)
+      : '—';
+
+    animateCount('qs-attempts', totalAttempts);
+    document.getElementById('qs-avg').textContent    = avgScore;
+    document.getElementById('qs-best').textContent   = bestScore;
+    animateCount('qs-badges', allBadges.length);
+
+    // Streak
+    document.getElementById('hero-streak').textContent = calcStreak(allAttempts);
+  }
+
+  function animateCount(id, target) {
+    if (typeof target !== 'number' || target === 0) {
+      document.getElementById(id).textContent = target || 0;
+      return;
+    }
+    const el   = document.getElementById(id);
+    const dur  = 800;
+    const step = 16;
+    const steps = dur / step;
+    let current = 0;
+    const inc = target / steps;
+    const timer = setInterval(() => {
+      current += inc;
+      if (current >= target) { current = target; clearInterval(timer); }
+      el.textContent = Math.round(current);
+    }, step);
+  }
+
+  // ── Mission ────────────────────────────────────────────────────
+  async function renderMission() {
+    const today = new Date().toISOString().split('T')[0];
+    const { count: dueCount } = await supabase
+      .from('question_progress')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', currentUser.id)
+      .lte('next_review', today);
+
+    const content = document.getElementById('mission-content');
+
+    if (dueCount > 0) {
+      content.innerHTML = `
+        <div class="mission-due-count">${dueCount}</div>
+        <div class="mission-due-label">question${dueCount !== 1 ? 's' : ''} due for review today</div>
+        <a class="start-study-btn" href="./modules.html">
+          <span>Start Studying</span>
+          <span>→</span>
+        </a>
+      `;
+    } else if (allAttempts.length === 0) {
+      content.innerHTML = `
+        <div class="mission-title">Welcome! 🎉</div>
+        <div class="mission-sub">You haven't done any quizzes yet. Pick a module and start studying.</div>
+        <a class="start-study-btn" href="./modules.html">
+          <span>Browse Modules</span>
+          <span>→</span>
+        </a>
+      `;
+    } else {
+      content.innerHTML = `
+        <div class="caught-up">
+          <span class="caught-up-icon">✅</span>
+          <div class="mission-title">You're all caught up!</div>
+          <div class="mission-sub" style="margin-bottom:16px;">No reviews due. Challenge yourself with a new quiz.</div>
+        </div>
+        <a class="start-study-btn" href="./modules.html" style="background:linear-gradient(135deg,var(--pink),var(--pink-dark));">
+          <span>Start a Challenge</span>
+          <span>⚡</span>
+        </a>
+      `;
+    }
+  }
+
+  // ── Last 3 sessions ────────────────────────────────────────────
+  function renderSessions() {
+    const list = document.getElementById('sessions-list');
+    const last3 = allAttempts.slice(0, 3);
+
+    if (last3.length === 0) {
+      list.innerHTML = `
+        <div class="empty-mini">
+          <span class="empty-mini-icon">📭</span>
+          No sessions yet
+        </div>`;
+      return;
+    }
+
+    list.innerHTML = last3.map(a => {
+      const pct = Math.round(a.score_pct || 0);
+      const scoreClass = pct >= 75 ? 'high' : pct >= 50 ? 'mid' : 'low';
+      const timeStr = formatTime(a.time_used || 0);
+      const dateStr = formatDateShort(a.completed_at);
+
+      return `
+        <div class="session-item">
+          <div class="session-icon ${a.mode}">${a.mode === 'easy' ? '🌱' : '🔥'}</div>
+          <div class="session-info">
+            <div class="session-module">${a.modules?.name || 'Unknown'}</div>
+            <div class="session-meta">${dateStr} · ${timeStr}</div>
+          </div>
+          <div class="session-score ${scoreClass}">${(a.score_20||0).toFixed(1)}/20</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ── Weak spots ─────────────────────────────────────────────────
+  async function renderWeakSpots() {
+    const list = document.getElementById('weak-list');
+
+    const { data } = await supabase
+      .from('question_progress')
+      .select('times_wrong, questions(text, chapter_id, chapters(name))')
+      .eq('user_id', currentUser.id)
+      .gte('times_wrong', 1)
+      .order('times_wrong', { ascending: false })
+      .limit(3);
+
+    if (!data || data.length === 0) {
+      list.innerHTML = `
+        <div class="empty-mini">
+          <span class="empty-mini-icon">🎯</span>
+          No weak spots yet — keep studying!
+        </div>`;
+      return;
+    }
+
+    list.innerHTML = data.map((row, i) => {
+      const qText   = row.questions?.text || 'Unknown question';
+      const chapter = row.questions?.chapters?.name || '—';
+      const short   = qText.length > 55 ? qText.slice(0, 52) + '…' : qText;
+
+      return `
+        <div class="weak-item">
+          <div class="weak-rank">${i + 1}</div>
+          <div class="weak-text">
+            <div class="weak-question">${short}</div>
+            <div class="weak-chapter">${chapter}</div>
+          </div>
+          <div class="weak-wrong-count">${row.times_wrong}✗</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ── Modules slider ─────────────────────────────────────────────
+  async function renderModulesSlider() {
+    const slider = document.getElementById('modules-slider');
+
+    if (allModules.length === 0) {
+      slider.innerHTML = `<div class="empty-mini"><span class="empty-mini-icon">📭</span>No modules yet</div>`;
+      document.getElementById('slider-wrap').querySelectorAll('.slider-arrow').forEach(a => a.style.display = 'none');
+      return;
+    }
+
+    // Load mastery for each module
+    const masteryData = await Promise.all(allModules.map(async mod => {
+      const { count: totalQ } = await supabase
+        .from('questions')
+        .select('id', { count: 'exact', head: true })
+        .eq('module_id', mod.id);
+
+      const { count: masteredQ } = await supabase
+        .from('question_progress')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', currentUser.id)
+        .gt('times_correct', 0);
+
+      const pct = totalQ > 0 ? Math.round((masteredQ / totalQ) * 100) : 0;
+      return { ...mod, masteryPct: pct, totalQ: totalQ || 0 };
+    }));
+
+    const circum = 2 * Math.PI * 14;
+
+    slider.innerHTML = masteryData.map((mod, i) => {
+      const offset = circum - (mod.masteryPct / 100) * circum;
+      const icon   = getModuleIcon(mod.name);
+
+      return `
+        <a class="module-slide-card animate-in" href="./modules.html"
+           style="animation-delay:${i * 60}ms; text-decoration:none;">
+          <span class="module-slide-icon">${icon}</span>
+          <div class="module-slide-name">${mod.name}</div>
+          <div class="module-slide-ring">
+            <div class="ring-wrap" style="width:32px;height:32px;">
+              <svg width="32" height="32" viewBox="0 0 32 32">
+                <circle class="ring-track" cx="16" cy="16" r="14" stroke-width="4"/>
+                <circle class="ring-fill" cx="16" cy="16" r="14" stroke-width="4"
+                  stroke-dasharray="${circum}"
+                  stroke-dashoffset="${offset}"/>
+              </svg>
+              <span class="ring-label" style="font-size:8px;">${mod.masteryPct}%</span>
+            </div>
+            <div>
+              <div class="module-slide-pct">${mod.masteryPct}%</div>
+              <div class="module-slide-label">${mod.totalQ}q</div>
+            </div>
+          </div>
+        </a>
+      `;
+    }).join('');
+  }
+
+  // ── Slider navigation ──────────────────────────────────────────
+  window.slideModules = function(dir) {
+    const slider = document.getElementById('modules-slider');
+    slider.scrollBy({ left: dir * 220, behavior: 'smooth' });
+  };
+
+  // ── Streak ─────────────────────────────────────────────────────
+  function calcStreak(attempts) {
+    if (attempts.length === 0) return 0;
+    const days = new Set(
+      attempts.map(a => new Date(a.completed_at).toISOString().split('T')[0])
+    );
+    let streak = 0;
+    let cursor = new Date();
+    cursor.setHours(0,0,0,0);
+
+    for (let i = 0; i < 365; i++) {
+      const key = cursor.toISOString().split('T')[0];
+      if (days.has(key)) {
+        streak++;
+        cursor.setDate(cursor.getDate() - 1);
+      } else if (i === 0) {
+        cursor.setDate(cursor.getDate() - 1);
+        continue;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────
+  function formatTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}m ${String(s).padStart(2,'0')}s`;
+  }
+
+  function formatDateShort(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
+
+  // ── Sidebar toggle ─────────────────────────────────────────────
+  function setupSidebarToggle() {
+    const saved = localStorage.getItem('sidebarCollapsed');
+    if (saved === 'true') {
+      document.getElementById('app-shell').classList.add('sidebar-collapsed');
+      document.getElementById('sidebar-toggle').textContent = '›';
+    }
+  }
+
+  window.toggleSidebar = function() {
+    const shell     = document.getElementById('app-shell');
+    const btn       = document.getElementById('sidebar-toggle');
+    const collapsed = shell.classList.toggle('sidebar-collapsed');
+    btn.textContent = collapsed ? '›' : '‹';
+    localStorage.setItem('sidebarCollapsed', collapsed);
+  };
+
+  window.handleSignOut = async function() { await signOut(); };
+
+  init().catch(console.error);
+</script>
+
+</body>
+</html>

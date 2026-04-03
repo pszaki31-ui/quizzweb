@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedMCQ — Modules</title>
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    /* ══════════════════════════════════════════════
+       MODULES PAGE STYLES
+       ══════════════════════════════════════════════ */
+
+    /* ── MODULE GRID ── */
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    /* ── MODULE CARD ── */
+    .module-card {
+      background: var(--surface);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+      cursor: pointer;
+      transition: all var(--t-med) var(--ease);
+      position: relative;
+    }
+
+    .module-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--cyan), var(--pink));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform var(--t-med) var(--ease);
+    }
+
+    .module-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg), var(--shadow-cyan);
+      border-color: var(--border-cyan);
+    }
+
+    .module-card:hover::after { transform: scaleX(1); }
+
+    .module-card.expanded {
+      border-color: var(--border-cyan);
+      box-shadow: var(--shadow-lg), var(--shadow-cyan);
+    }
+
+    .module-card-header {
+      padding: 22px 22px 18px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      cursor: pointer;
+    }
+
+    .module-icon-wrap {
+      width: 52px; height: 52px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, rgba(0,200,212,0.12), rgba(240,98,164,0.08));
+      border: 1px solid rgba(0,200,212,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+      transition: transform var(--t-fast);
+    }
+
+    .module-card:hover .module-icon-wrap { transform: scale(1.05); }
+
+    .module-info { flex: 1; min-width: 0; }
+
+    .module-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+      margin-bottom: 4px;
+    }
+
+    .module-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Progress ring */
+    .module-ring {
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .module-ring svg { transform: rotate(-90deg); display: block; }
+    .ring-track-m { fill: none; stroke: var(--bg-alt); stroke-width: 4; }
+    .ring-fill-m  { fill: none; stroke: var(--cyan); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 0.8s var(--ease-out); }
+
+    .ring-label-m {
+      position: absolute;
+      inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--cyan-dark);
+    }
+
+    /* Expand arrow */
+    .expand-arrow {
+      font-size: 11px;
+      color: var(--text-muted);
+      transition: transform var(--t-fast);
+      flex-shrink: 0;
+    }
+
+    .module-card.expanded .expand-arrow { transform: rotate(180deg); }
+
+    /* ── CHAPTER LIST (expanded) ── */
+    .chapters-panel {
+      display: none;
+      border-top: 1px solid var(--border-soft);
+      background: rgba(0,0,0,0.015);
+    }
+
+    .module-card.expanded .chapters-panel { display: block; }
+
+    .chapters-list-inner {
+      padding: 14px 18px;
+    }
+
+    .chapter-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background var(--t-fast);
+      border: 1.5px solid transparent;
+      margin-bottom: 6px;
+    }
+
+    .chapter-item:last-child { margin-bottom: 0; }
+
+    .chapter-item:hover { background: var(--cyan-wash); border-color: rgba(0,200,212,0.2); }
+
+    .chapter-item.selected {
+      background: rgba(0,200,212,0.1);
+      border-color: rgba(0,200,212,0.35);
+    }
+
+    .chapter-checkbox {
+      width: 18px; height: 18px;
+      border: 2px solid var(--border-soft);
+      border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 10px;
+      font-weight: 700;
+      transition: all var(--t-fast);
+      background: white;
+    }
+
+    .chapter-item.selected .chapter-checkbox {
+      background: var(--cyan);
+      border-color: var(--cyan);
+      color: white;
+    }
+
+    .chapter-name {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .chapter-q-count {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* Select all row */
+    .select-all-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .select-all-btn {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--cyan-dark);
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: inherit;
+      transition: opacity var(--t-fast);
+    }
+
+    .select-all-btn:hover { opacity: 0.7; }
+
+    .selected-count {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* ── LAUNCH PANEL (sticky right) ── */
+    .layout-with-panel {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 28px;
+      align-items: start;
+    }
+
+    .launch-panel {
+      position: sticky;
+      top: 88px;
+    }
+
+    .launch-card {
+      background: var(--surface);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+    }
+
+    .launch-card-header {
+      background: linear-gradient(135deg, #0d1117, #0d2330);
+      padding: 20px 22px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .launch-card-header::after {
+      content: '';
+      position: absolute;
+      top: -40px; right: -30px;
+      width: 120px; height: 120px;
+      background: radial-gradient(circle, rgba(0,200,212,0.3), transparent 70%);
+      pointer-events: none;
+    }
+
+    .launch-header-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: white;
+      position: relative;
+      z-index: 1;
+      margin-bottom: 2px;
+    }
+
+    .launch-header-sub {
+      font-size: 12px;
+      color: rgba(255,255,255,0.4);
+      position: relative;
+      z-index: 1;
+    }
+
+    .launch-card-body { padding: 20px 22px; }
+
+    /* Selection summary */
+    .selection-summary {
+      margin-bottom: 18px;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .summary-row:last-child { border-bottom: none; }
+    .summary-key { color: var(--text-muted); }
+    .summary-val { font-weight: 600; color: var(--text-primary); font-family: 'DM Mono', monospace; }
+    .summary-val.cyan { color: var(--cyan-dark); }
+
+    /* Mode selector */
+    .mode-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 8px;
+    }
+
+    .mode-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .mode-btn {
+      padding: 12px 10px;
+      border-radius: var(--radius-md);
+      border: 2px solid var(--border-soft);
+      background: rgba(255,255,255,0.5);
+      cursor: pointer;
+      text-align: center;
+      transition: all var(--t-fast);
+      font-family: inherit;
+    }
+
+    .mode-btn:hover { border-color: var(--cyan); background: var(--cyan-wash); }
+
+    .mode-btn.active.easy {
+      border-color: var(--success);
+      background: rgba(16,201,138,0.08);
+    }
+
+    .mode-btn.active.hard {
+      border-color: var(--pink);
+      background: var(--pink-wash);
+    }
+
+    .mode-btn-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+    .mode-btn-name { font-size: 13px; font-weight: 600; color: var(--text-primary); display: block; }
+    .mode-btn-desc { font-size: 11px; color: var(--text-muted); display: block; margin-top: 2px; }
+
+    /* Start button */
+    .start-quiz-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--cyan), var(--cyan-dark));
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 4px 16px var(--cyan-glow);
+      transition: all var(--t-fast) var(--ease);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .start-quiz-btn::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      transition: left 0.4s ease;
+    }
+
+    .start-quiz-btn:hover::before { left: 100%; }
+    .start-quiz-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(0,200,212,0.4); }
+    .start-quiz-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+    /* Difficulty ratio info */
+    .ratio-info {
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: rgba(0,0,0,0.03);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Empty state */
+    .no-chapters-selected {
+      text-align: center;
+      padding: 24px 16px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .no-chapters-icon {
+      font-size: 32px;
+      display: block;
+      margin-bottom: 8px;
+      opacity: 0.4;
+    }
+
+    /* Loading skeleton */
+    .module-card-skeleton {
+      height: 100px;
+      border-radius: var(--radius-lg);
+    }
+
+    /* Section heading */
+    .section-heading {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-heading::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-soft);
+    }
+
+    /* No modules state */
+    .no-modules {
+      text-align: center;
+      padding: 60px 20px;
+      grid-column: 1 / -1;
+    }
+
+    @media (max-width: 960px) {
+      .layout-with-panel {
+        grid-template-columns: 1fr;
+      }
+      .launch-panel { position: static; }
+    }
+
+    @media (max-width: 600px) {
+      .modules-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-shell" id="app-shell">
+
+  <!-- ── SIDEBAR ── -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-avatar" id="sidebar-avatar">?</div>
+      <span class="sidebar-name" id="sidebar-name">Loading…</span>
+    </div>
+    <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">‹</button>
+    <div class="sidebar-nav">
+      <a class="nav-item" href="./index.html" data-label="Dashboard">
+        <span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span>
+      </a>
+      <a class="nav-item active" href="./modules.html" data-label="Modules">
+        <span class="nav-icon">📚</span><span class="nav-label">Modules</span>
+      </a>
+      <a class="nav-item" href="./progress.html" data-label="Progress">
+        <span class="nav-icon">📈</span><span class="nav-label">Progress</span>
+      </a>
+      <a class="nav-item" href="./scoreboard.html" data-label="Scoreboard">
+        <span class="nav-icon">🏆</span><span class="nav-label">Scoreboard</span>
+      </a>
+      <a class="nav-item" href="./profile.html" data-label="Profile">
+        <span class="nav-icon">👤</span><span class="nav-label">Profile</span>
+      </a>
+    </div>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="handleSignOut()">
+        <span class="nav-icon">🚪</span><span>Sign Out</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ── MAIN CONTENT ── -->
+  <main class="main-content">
+
+    <div class="page-header animate-in">
+      <div class="page-title">Modules</div>
+      <div class="page-subtitle">Pick your chapters and fire up a quiz.</div>
+    </div>
+
+    <div class="layout-with-panel">
+
+      <!-- ── LEFT: MODULE + CHAPTER BROWSER ── -->
+      <div>
+        <div class="section-heading">Available Modules</div>
+        <div class="modules-grid" id="modules-grid">
+          <!-- Skeletons -->
+          <div class="skeleton module-card-skeleton animate-in"></div>
+          <div class="skeleton module-card-skeleton animate-in stagger-1"></div>
+          <div class="skeleton module-card-skeleton animate-in stagger-2"></div>
+        </div>
+      </div>
+
+      <!-- ── RIGHT: LAUNCH PANEL ── -->
+      <div class="launch-panel">
+        <div class="launch-card animate-in stagger-2">
+          <div class="launch-card-header">
+            <div class="launch-header-title">Start Quiz</div>
+            <div class="launch-header-sub">Configure your session</div>
+          </div>
+          <div class="launch-card-body">
+
+            <!-- Selection summary -->
+            <div class="selection-summary" id="selection-summary">
+              <div class="no-chapters-selected">
+                <span class="no-chapters-icon">📌</span>
+                Select chapters from a module to begin
+              </div>
+            </div>
+
+            <!-- Mode selector -->
+            <div class="mode-label">Mode</div>
+            <div class="mode-options">
+              <button class="mode-btn active easy" id="mode-easy" onclick="selectMode('easy')">
+                <span class="mode-btn-icon">🌱</span>
+                <span class="mode-btn-name">Easy</span>
+                <span class="mode-btn-desc">25q · 20 min</span>
+              </button>
+              <button class="mode-btn hard" id="mode-hard" onclick="selectMode('hard')">
+                <span class="mode-btn-icon">🔥</span>
+                <span class="mode-btn-name">Hard</span>
+                <span class="mode-btn-desc">38q · 20 min</span>
+              </button>
+            </div>
+
+            <!-- Start button -->
+            <button class="start-quiz-btn" id="start-btn" disabled onclick="startQuiz()">
+              Start Quiz →
+            </button>
+
+            <!-- Ratio info -->
+            <div class="ratio-info" id="ratio-info">
+              🌱 Easy mode: 90% easy, 10% medium/hard questions
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script type="module">
+  import {
+    supabase,
+    requireAuth,
+    getCurrentProfile,
+    getModules,
+    getChaptersByModule,
+    signOut,
+  } from './js/supabase.js';
+
+  // ── State ──────────────────────────────────────────────────────
+  let currentUser    = null;
+  let currentProfile = null;
+  let allModules     = [];
+  let moduleChapters = {};   // { moduleId: [chapters] }
+  let selectedChapters = {}; // { chapterId: { name, moduleId, moduleName, qCount } }
+  let expandedModule = null;
+  let selectedMode   = 'easy';
+  let moduleProgress = {}; // { moduleId: pct }
+
+  const moduleIcons = {
+    anatomy: '🦴', physiology: '❤️', biochemistry: '🧪',
+    pharmacology: '💊', pathology: '🔬', microbiology: '🦠',
+    immunology: '🛡️', neuroscience: '🧠', cardiology: '🫀',
+    respiratory: '🫁', default: '📖'
+  };
+
+  function getModuleIcon(name) {
+    const key = name.toLowerCase();
+    for (const [k, v] of Object.entries(moduleIcons)) {
+      if (key.includes(k)) return v;
+    }
+    return moduleIcons.default;
+  }
+
+  // ── Boot ───────────────────────────────────────────────────────
+  async function init() {
+    currentUser    = await requireAuth();
+    if (!currentUser) return;
+    currentProfile = await getCurrentProfile();
+
+    renderSidebar();
+    setupSidebarToggle();
+
+
+    allModules = await getModules();
+
+    // Load mastery data for each module
+    await Promise.all(allModules.map(async mod => {
+      const { count: totalQ } = await supabase
+        .from('questions')
+        .select('id', { count: 'exact', head: true })
+        .eq('module_id', mod.id);
+
+      const { count: masteredQ } = await supabase
+        .from('question_progress')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', currentUser.id)
+        .gt('times_correct', 0);
+
+      moduleProgress[mod.id] = totalQ > 0 ? Math.round((masteredQ / totalQ) * 100) : 0;
+    }));
+
+    renderModulesGrid();
+  }
+
+  // ── Sidebar ────────────────────────────────────────────────────
+  function renderSidebar() {
+    const name     = currentProfile?.name || currentUser.email;
+    const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    document.getElementById('sidebar-avatar').textContent = initials;
+    document.getElementById('sidebar-name').textContent   = name;
+  }
+
+  // ── Modules grid ───────────────────────────────────────────────
+  function renderModulesGrid() {
+    const grid = document.getElementById('modules-grid');
+
+    if (allModules.length === 0) {
+      grid.innerHTML = `
+        <div class="no-modules">
+          <div style="font-size:40px;margin-bottom:12px;opacity:0.4;">📭</div>
+          <div style="font-weight:600;color:var(--text-primary);margin-bottom:4px;">No modules yet</div>
+          <div class="text-muted text-sm">Ask your admin to add modules and questions.</div>
+        </div>
+      `;
+      return;
+    }
+
+    grid.innerHTML = allModules.map((mod, i) => {
+      const pct    = moduleProgress[mod.id] || 0;
+      const circum = 2 * Math.PI * 18;
+      const offset = circum - (pct / 100) * circum;
+      const icon   = getModuleIcon(mod.name);
+
+      return `
+        <div class="module-card animate-in" style="animation-delay:${i * 60}ms;" id="mod-card-${mod.id}">
+          <div class="module-card-header" onclick="toggleModule('${mod.id}', '${mod.name.replace(/'/g,"\\'")}')">
+            <div class="module-icon-wrap">${icon}</div>
+            <div class="module-info">
+              <div class="module-name">${mod.name}</div>
+              <div class="module-meta">
+                <span id="mod-count-${mod.id}">Loading…</span>
+              </div>
+            </div>
+            <div class="module-ring" style="width:44px;height:44px;position:relative;">
+              <svg width="44" height="44" viewBox="0 0 44 44">
+                <circle class="ring-track-m" cx="22" cy="22" r="18"/>
+                <circle class="ring-fill-m" cx="22" cy="22" r="18"
+                  stroke-dasharray="${circum}"
+                  stroke-dashoffset="${offset}"/>
+              </svg>
+              <div class="ring-label-m">${pct}%</div>
+            </div>
+            <span class="expand-arrow">▼</span>
+          </div>
+          <div class="chapters-panel" id="chapters-${mod.id}">
+            <div class="chapters-list-inner">
+              <div style="text-align:center;padding:16px;color:var(--text-muted);font-size:13px;">
+                <div class="spinner" style="margin:0 auto 8px;width:24px;height:24px;border-width:2px;"></div>
+                Loading chapters…
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Load question counts asynchronously
+    allModules.forEach(async mod => {
+      const { count } = await supabase
+        .from('questions')
+        .select('id', { count: 'exact', head: true })
+        .eq('module_id', mod.id);
+
+      const el = document.getElementById(`mod-count-${mod.id}`);
+      if (el) el.textContent = `${count || 0} questions`;
+    });
+  }
+
+  // ── Toggle module expand ───────────────────────────────────────
+  window.toggleModule = async function(moduleId, moduleName) {
+    const card = document.getElementById(`mod-card-${moduleId}`);
+    const panel = document.getElementById(`chapters-${moduleId}`);
+
+    // Collapse if already expanded
+    if (expandedModule === moduleId) {
+      card.classList.remove('expanded');
+      expandedModule = null;
+      return;
+    }
+
+    // Collapse previously expanded
+    if (expandedModule) {
+      document.getElementById(`mod-card-${expandedModule}`)?.classList.remove('expanded');
+    }
+
+    expandedModule = moduleId;
+    card.classList.add('expanded');
+
+    // Load chapters if not cached
+    if (!moduleChapters[moduleId]) {
+      moduleChapters[moduleId] = await getChaptersByModule(moduleId);
+
+      // Load question counts for chapters
+      await Promise.all(moduleChapters[moduleId].map(async ch => {
+        const { count } = await supabase
+          .from('questions')
+          .select('id', { count: 'exact', head: true })
+          .eq('chapter_id', ch.id);
+        ch.qCount = count || 0;
+      }));
+    }
+
+    renderChaptersList(moduleId, moduleName, panel);
+  };
+
+  // ── Render chapters list ───────────────────────────────────────
+  function renderChaptersList(moduleId, moduleName, panel) {
+    const chapters = moduleChapters[moduleId] || [];
+    const inner = panel.querySelector('.chapters-list-inner');
+
+    if (chapters.length === 0) {
+      inner.innerHTML = `<div style="text-align:center;padding:16px;color:var(--text-muted);font-size:13px;">No chapters yet.</div>`;
+      return;
+    }
+
+    const allSelected = chapters.every(ch => selectedChapters[ch.id]);
+    const someSelected = chapters.some(ch => selectedChapters[ch.id]);
+
+    inner.innerHTML = `
+      <div class="select-all-row">
+        <button class="select-all-btn" onclick="toggleAllChapters('${moduleId}', '${moduleName}')">
+          ${allSelected ? 'Deselect all' : 'Select all'}
+        </button>
+        <span class="selected-count">${chapters.filter(ch => selectedChapters[ch.id]).length} / ${chapters.length} selected</span>
+      </div>
+      ${chapters.map(ch => {
+        const isSelected = !!selectedChapters[ch.id];
+        return `
+          <div class="chapter-item ${isSelected ? 'selected' : ''}" onclick="toggleChapter('${ch.id}', '${ch.name.replace(/'/g,"\\'")}', '${moduleId}', '${moduleName.replace(/'/g,"\\'")}', ${ch.qCount})">
+            <div class="chapter-checkbox">${isSelected ? '✓' : ''}</div>
+            <div class="chapter-name">${ch.name}</div>
+            <div class="chapter-q-count">${ch.qCount}q</div>
+          </div>
+        `;
+      }).join('')}
+    `;
+  }
+
+  // ── Toggle chapter selection ───────────────────────────────────
+  window.toggleChapter = function(chapterId, chapterName, moduleId, moduleName, qCount) {
+    if (selectedChapters[chapterId]) {
+      delete selectedChapters[chapterId];
+    } else {
+      selectedChapters[chapterId] = { name: chapterName, moduleId, moduleName, qCount };
+    }
+
+    // Re-render chapters panel
+    const panel = document.getElementById(`chapters-${moduleId}`);
+    if (panel) renderChaptersList(moduleId, moduleName, panel);
+
+    updateLaunchPanel();
+  };
+
+  window.toggleAllChapters = function(moduleId, moduleName) {
+    const chapters = moduleChapters[moduleId] || [];
+    const allSelected = chapters.every(ch => selectedChapters[ch.id]);
+
+    if (allSelected) {
+      chapters.forEach(ch => delete selectedChapters[ch.id]);
+    } else {
+      chapters.forEach(ch => {
+        selectedChapters[ch.id] = { name: ch.name, moduleId, moduleName, qCount: ch.qCount };
+      });
+    }
+
+    const panel = document.getElementById(`chapters-${moduleId}`);
+    if (panel) renderChaptersList(moduleId, moduleName, panel);
+
+    updateLaunchPanel();
+  };
+
+  // ── Update launch panel ────────────────────────────────────────
+  function updateLaunchPanel() {
+    const selected   = Object.values(selectedChapters);
+    const totalQ     = selected.reduce((s, ch) => s + (ch.qCount || 0), 0);
+    const chapterIds = Object.keys(selectedChapters);
+    const startBtn   = document.getElementById('start-btn');
+    const summary    = document.getElementById('selection-summary');
+
+    if (chapterIds.length === 0) {
+      summary.innerHTML = `
+        <div class="no-chapters-selected">
+          <span class="no-chapters-icon">📌</span>
+          Select chapters from a module to begin
+        </div>
+      `;
+      startBtn.disabled = true;
+      return;
+    }
+
+    // Group by module
+    const byModule = {};
+    selected.forEach(ch => {
+      if (!byModule[ch.moduleId]) byModule[ch.moduleId] = { name: ch.moduleName, count: 0 };
+      byModule[ch.moduleId].count++;
+    });
+
+    const targetQ    = selectedMode === 'hard' ? 38 : 25;
+    const actualQ    = Math.min(totalQ, targetQ);
+    const timeMinutes = Math.round((actualQ / targetQ) * 20);
+
+    summary.innerHTML = `
+      <div class="summary-row">
+        <span class="summary-key">Chapters</span>
+        <span class="summary-val cyan">${chapterIds.length} selected</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-key">Available questions</span>
+        <span class="summary-val">${totalQ}</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-key">Quiz questions</span>
+        <span class="summary-val cyan">${actualQ}</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-key">Time limit</span>
+        <span class="summary-val">${timeMinutes} min</span>
+      </div>
+      ${Object.values(byModule).map(m => `
+        <div class="summary-row">
+          <span class="summary-key">${m.name}</span>
+          <span class="summary-val">${m.count} ch</span>
+        </div>
+      `).join('')}
+    `;
+
+    startBtn.disabled = totalQ === 0;
+  }
+
+  // ── Mode selection ─────────────────────────────────────────────
+  window.selectMode = function(mode) {
+    selectedMode = mode;
+    document.getElementById('mode-easy').className = `mode-btn easy${mode === 'easy' ? ' active' : ''}`;
+    document.getElementById('mode-hard').className = `mode-btn hard${mode === 'hard' ? ' active' : ''}`;
+
+    const ratioInfo = document.getElementById('ratio-info');
+    ratioInfo.textContent = mode === 'easy'
+      ? '🌱 Easy mode: 90% easy, 10% medium/hard questions'
+      : '🔥 Hard mode: 60% hard, 30% medium, 10% easy questions';
+
+    updateLaunchPanel();
+  };
+
+  // ── Start quiz ─────────────────────────────────────────────────
+  window.startQuiz = function() {
+    const chapterIds = Object.keys(selectedChapters);
+    if (chapterIds.length === 0) return;
+
+    // Determine module (use the first selected chapter's module)
+    const first    = Object.values(selectedChapters)[0];
+    const moduleId = first.moduleId;
+    const moduleName = first.moduleName;
+
+    const params = new URLSearchParams({
+      mode:       selectedMode,
+      module:     moduleId,
+      moduleName: moduleName,
+      chapters:   chapterIds.join(',')
+    });
+
+    window.location.href = `/quiz.html?${params.toString()}`;
+  };
+
+  // ── Sidebar toggle ─────────────────────────────────────────────
+  function setupSidebarToggle() {
+    const saved = localStorage.getItem('sidebarCollapsed');
+    if (saved === 'true') {
+      document.getElementById('app-shell').classList.add('sidebar-collapsed');
+      document.getElementById('sidebar-toggle').textContent = '›';
+    }
+  }
+
+  window.toggleSidebar = function() {
+    const shell     = document.getElementById('app-shell');
+    const btn       = document.getElementById('sidebar-toggle');
+    const collapsed = shell.classList.toggle('sidebar-collapsed');
+    btn.textContent = collapsed ? '›' : '‹';
+    localStorage.setItem('sidebarCollapsed', collapsed);
+  };
+
+  window.handleSignOut = async function() { await signOut(); };
+
+  init().catch(console.error);
+</script>
+
+</body>
+</html>

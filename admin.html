@@ -1,0 +1,2350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedMCQ — Admin</title>
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    /* ══════════════════════════════════════════════
+       ADMIN PANEL STYLES
+       ══════════════════════════════════════════════ */
+
+    /* ── ADMIN SHELL — overrides main layout ── */
+    .admin-shell {
+      display: flex;
+      min-height: 100vh;
+      flex-direction: column;
+    }
+
+    /* ── TOP BAR ── */
+    .admin-topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 60px;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      border-bottom: 1px solid var(--border-soft);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      gap: 20px;
+      z-index: 200;
+    }
+
+    .topbar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--cyan-dark), var(--pink-dark));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    .topbar-logo-icon {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--cyan), var(--pink));
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .topbar-admin-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      background: rgba(240,98,164,0.1);
+      border: 1px solid rgba(240,98,164,0.25);
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--pink-dark);
+    }
+
+    /* Quick stat badges */
+    .topbar-stats {
+      display: flex;
+      gap: 10px;
+      margin-left: auto;
+      align-items: center;
+    }
+
+    .topbar-stat {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 14px;
+      background: var(--surface-alt);
+      border: 1px solid var(--border-soft);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .topbar-stat strong {
+      font-weight: 700;
+      color: var(--text-primary);
+      font-family: 'DM Mono', monospace;
+    }
+
+    .topbar-stat.danger strong { color: var(--danger); }
+    .topbar-stat.success strong { color: var(--success); }
+
+    /* Admin profile */
+    .topbar-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      background: none;
+      border: 1px solid var(--border-soft);
+      cursor: pointer;
+      transition: all var(--t-fast);
+      font-family: inherit;
+      position: relative;
+    }
+
+    .topbar-profile:hover {
+      background: var(--cyan-wash);
+      border-color: var(--cyan);
+    }
+
+    .topbar-profile-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--pink));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: white;
+    }
+
+    .topbar-profile-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .profile-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: var(--surface-solid);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      min-width: 160px;
+      padding: 6px;
+      z-index: 300;
+      display: none;
+      animation: slideUp var(--t-fast) var(--ease);
+    }
+
+    .profile-dropdown.open { display: block; }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: background var(--t-fast);
+      border: none;
+      background: none;
+      width: 100%;
+      font-family: inherit;
+    }
+
+    .dropdown-item:hover { background: var(--cyan-wash); color: var(--cyan-dark); }
+    .dropdown-item.danger:hover { background: rgba(240,64,96,0.08); color: var(--danger); }
+
+    /* ── ADMIN LAYOUT ── */
+    .admin-body {
+      display: flex;
+      margin-top: 60px;
+      min-height: calc(100vh - 60px);
+    }
+
+    /* ── ADMIN SIDEBAR ── */
+    .admin-sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      position: fixed;
+      top: 60px;
+      left: 0;
+      bottom: 0;
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: var(--blur);
+      border-right: 1px solid var(--border-soft);
+      padding: 20px 12px;
+      overflow-y: auto;
+      z-index: 100;
+    }
+
+    .admin-nav-group {
+      margin-bottom: 24px;
+    }
+
+    .admin-nav-group-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0 10px;
+      margin-bottom: 6px;
+    }
+
+    .admin-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 450;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--t-fast);
+      border: none;
+      background: none;
+      width: 100%;
+      font-family: inherit;
+      text-align: left;
+    }
+
+    .admin-nav-item:hover {
+      background: var(--cyan-wash);
+      color: var(--cyan-dark);
+    }
+
+    .admin-nav-item.active {
+      background: rgba(0,200,212,0.12);
+      color: var(--cyan-dark);
+      font-weight: 600;
+      box-shadow: inset 3px 0 0 var(--cyan);
+    }
+
+    .admin-nav-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+
+    /* ── ADMIN MAIN ── */
+    .admin-main {
+      flex: 1;
+      margin-left: 220px;
+      padding: 28px 32px;
+      min-width: 0;
+    }
+
+    /* ── SECTIONS (shown/hidden) ── */
+    .admin-section { display: none; }
+    .admin-section.active { display: block; }
+
+    /* ── SECTION HEADER ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .section-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+    }
+
+    .section-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ── STAT CARDS ROW ── */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      backdrop-filter: var(--blur);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--t-fast);
+    }
+
+    .stat-card:hover { transform: translateY(-2px); }
+
+    .stat-card-icon {
+      font-size: 22px;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .stat-card-val {
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: -1.5px;
+      line-height: 1;
+      background: linear-gradient(135deg, var(--cyan-dark), var(--pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 4px;
+    }
+
+    .stat-card-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* ── QUICK ACTIONS ── */
+    .quick-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+
+    /* ── DATA TABLE ── */
+    .data-table-wrap {
+      background: var(--surface);
+      backdrop-filter: var(--blur);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 24px;
+    }
+
+    .data-table-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border-soft);
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .data-table-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .search-input {
+      padding: 7px 14px;
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-family: inherit;
+      background: rgba(255,255,255,0.7);
+      outline: none;
+      width: 200px;
+      transition: all var(--t-fast);
+    }
+
+    .search-input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px var(--cyan-glow);
+      width: 240px;
+    }
+
+    .filter-select {
+      padding: 7px 12px;
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-family: inherit;
+      background: rgba(255,255,255,0.7);
+      outline: none;
+      cursor: pointer;
+      transition: border-color var(--t-fast);
+    }
+
+    .filter-select:focus { border-color: var(--cyan); }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .data-table thead th {
+      padding: 11px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: rgba(0,0,0,0.02);
+      border-bottom: 1px solid var(--border-soft);
+      white-space: nowrap;
+    }
+
+    .data-table tbody td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-soft);
+      color: var(--text-primary);
+    }
+
+    .data-table tbody tr:last-child td { border-bottom: none; }
+
+    .data-table tbody tr {
+      transition: background var(--t-fast);
+    }
+
+    .data-table tbody tr:hover { background: var(--cyan-wash); }
+
+    /* Action buttons in table */
+    .row-actions {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .action-btn {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--border-soft);
+      background: rgba(255,255,255,0.6);
+      color: var(--text-secondary);
+      transition: all var(--t-fast);
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .action-btn:hover { border-color: var(--cyan); color: var(--cyan-dark); background: var(--cyan-wash); }
+    .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); background: rgba(240,64,96,0.08); }
+    .action-btn.success:hover { border-color: var(--success); color: var(--success); background: rgba(16,201,138,0.08); }
+
+    /* ── FORMS ── */
+    .form-card {
+      background: var(--surface);
+      backdrop-filter: var(--blur);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 24px;
+    }
+
+    .form-card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .form-grid.cols-1 { grid-template-columns: 1fr; }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group.span-2 { grid-column: span 2; }
+    .form-group.span-3 { grid-column: span 3; }
+
+    .form-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .form-input, .form-select, .form-textarea {
+      padding: 10px 14px;
+      border: 1.5px solid var(--border-soft);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-family: inherit;
+      background: rgba(255,255,255,0.7);
+      color: var(--text-primary);
+      outline: none;
+      transition: all var(--t-fast);
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--cyan);
+      background: rgba(255,255,255,0.95);
+      box-shadow: 0 0 0 3px var(--cyan-glow);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .option-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .option-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      width: 20px;
+      flex-shrink: 0;
+    }
+
+    .correct-toggle {
+      width: 20px; height: 20px;
+      border: 2px solid var(--border-soft);
+      border-radius: 5px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      background: white;
+      flex-shrink: 0;
+      transition: all var(--t-fast);
+      font-size: 11px;
+    }
+
+    .correct-toggle.active {
+      background: var(--success);
+      border-color: var(--success);
+      color: white;
+    }
+
+    /* ── UPLOAD ZONE ── */
+    .upload-zone {
+      border: 2px dashed var(--border-soft);
+      border-radius: var(--radius-md);
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--t-fast);
+      background: rgba(255,255,255,0.3);
+    }
+
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: var(--cyan);
+      background: var(--cyan-wash);
+    }
+
+    .upload-icon { font-size: 36px; margin-bottom: 12px; display: block; opacity: 0.6; }
+    .upload-title { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+    .upload-sub { font-size: 13px; color: var(--text-muted); }
+
+    /* Upload preview */
+    .upload-preview {
+      margin-top: 16px;
+      background: var(--bg-alt);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-size: 12px;
+      font-family: 'DM Mono', monospace;
+      color: var(--text-secondary);
+      max-height: 200px;
+      overflow-y: auto;
+      text-align: left;
+      display: none;
+    }
+
+    .upload-preview.show { display: block; }
+
+    /* Validation result */
+    .validation-result {
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      display: none;
+    }
+
+    .validation-result.show { display: flex; align-items: center; gap: 8px; }
+    .validation-result.ok { background: rgba(16,201,138,0.08); color: #0a9c6a; border: 1px solid rgba(16,201,138,0.2); }
+    .validation-result.err { background: rgba(240,64,96,0.08); color: #c02040; border: 1px solid rgba(240,64,96,0.2); }
+
+    /* ── CODES ── */
+    .code-pill {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 3px 10px;
+      background: var(--cyan-wash);
+      color: var(--cyan-dark);
+      border: 1px solid rgba(0,200,212,0.25);
+      border-radius: 6px;
+      letter-spacing: 2px;
+    }
+
+    .code-pill.used {
+      background: var(--bg-alt);
+      color: var(--text-muted);
+      border-color: var(--border-soft);
+      text-decoration: line-through;
+      letter-spacing: 1px;
+    }
+
+    /* ── STATUS DOTS ── */
+    .status-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .status-dot::before {
+      content: '';
+      width: 7px; height: 7px;
+      border-radius: 50%;
+    }
+
+    .status-dot.active::before  { background: var(--success); box-shadow: 0 0 0 2px rgba(16,201,138,0.2); }
+    .status-dot.inactive::before { background: var(--text-muted); }
+    .status-dot.expiring::before { background: var(--warning); box-shadow: 0 0 0 2px rgba(245,166,35,0.2); }
+    .status-dot.expired::before  { background: var(--danger); box-shadow: 0 0 0 2px rgba(240,64,96,0.2); }
+
+    /* ── MODAL ── */
+    .admin-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(4px);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn var(--t-fast) ease;
+    }
+
+    .admin-modal {
+      background: var(--surface-solid);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      padding: 28px 32px;
+      width: 90%;
+      max-width: 520px;
+      animation: slideUp var(--t-med) var(--ease);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.4px;
+    }
+
+    .modal-close {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      border: 1px solid var(--border-soft);
+      background: rgba(0,0,0,0.04);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      transition: all var(--t-fast);
+      font-family: inherit;
+    }
+
+    .modal-close:hover { background: var(--danger); color: white; border-color: var(--danger); }
+
+    /* ── TOP FAILED QUESTIONS ── */
+    .failed-q-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      background: rgba(240,64,96,0.04);
+      border: 1px solid rgba(240,64,96,0.1);
+      margin-bottom: 8px;
+      transition: all var(--t-fast);
+    }
+
+    .failed-q-item:hover {
+      background: rgba(240,64,96,0.08);
+      transform: translateX(3px);
+    }
+
+    .failed-rank {
+      font-size: 18px;
+      font-weight: 800;
+      color: rgba(240,64,96,0.3);
+      font-family: 'DM Mono', monospace;
+      min-width: 28px;
+    }
+
+    .failed-q-text {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .failed-q-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .failed-count {
+      font-size: 12px;
+      font-weight: 700;
+      color: #c02040;
+      font-family: 'DM Mono', monospace;
+      background: rgba(240,64,96,0.1);
+      padding: 3px 8px;
+      border-radius: 999px;
+    }
+
+    /* ── MODULE PERF BARS ── */
+    .module-perf-item {
+      margin-bottom: 14px;
+    }
+
+    .module-perf-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .module-perf-name { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+    .module-perf-val  { font-size: 13px; font-weight: 600; color: var(--cyan-dark); font-family: 'DM Mono', monospace; }
+
+    .module-perf-bar {
+      height: 6px;
+      background: var(--bg-alt);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .module-perf-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--cyan), var(--pink));
+      transition: width 0.8s var(--ease-out);
+    }
+
+    /* ── DASHBOARD GRID ── */
+    .admin-dash-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .admin-dash-grid .full { grid-column: 1 / -1; }
+
+    /* ── GENERATED CODE DISPLAY ── */
+    .generated-code-wrap {
+      display: none;
+      margin-top: 16px;
+      padding: 16px 20px;
+      background: rgba(0,200,212,0.06);
+      border: 1px solid var(--border-cyan);
+      border-radius: var(--radius-md);
+      align-items: center;
+      gap: 12px;
+    }
+
+    .generated-code-wrap.show { display: flex; }
+
+    .generated-code {
+      font-family: 'DM Mono', monospace;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      color: var(--cyan-dark);
+      flex: 1;
+    }
+
+    .copy-btn {
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-cyan);
+      background: var(--cyan-wash);
+      color: var(--cyan-dark);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--t-fast);
+      font-family: inherit;
+    }
+
+    .copy-btn:hover { background: var(--cyan); color: white; }
+
+    /* ── EMPTY STATE ── */
+    .admin-empty {
+      text-align: center;
+      padding: 50px 20px;
+      color: var(--text-muted);
+    }
+
+    .admin-empty-icon { font-size: 36px; display: block; margin-bottom: 12px; opacity: 0.4; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .admin-sidebar { display: none; }
+      .admin-main { margin-left: 0; }
+      .admin-dash-grid { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-group.span-2, .form-group.span-3 { grid-column: span 1; }
+      .topbar-stats { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="admin-shell">
+
+  <!-- ── TOP BAR ── -->
+  <header class="admin-topbar">
+    <a class="topbar-logo" href="./index.html">
+      <div class="topbar-logo-icon">🧠</div>
+      MedMCQ
+    </a>
+    <span class="topbar-admin-badge">⚙️ Admin Panel</span>
+
+    <!-- Quick stat badges -->
+    <div class="topbar-stats">
+      <div class="topbar-stat success">
+        <span>👥</span>
+        <strong id="tb-users">—</strong> users
+      </div>
+      <div class="topbar-stat">
+        <span>🟢</span>
+        <strong id="tb-active">—</strong> active today
+      </div>
+      <div class="topbar-stat danger">
+        <span>🎟️</span>
+        <strong id="tb-codes">—</strong> unused codes
+      </div>
+    </div>
+
+    <!-- Profile -->
+    <div class="topbar-profile" onclick="toggleProfileDropdown()">
+      <div class="topbar-profile-avatar" id="tb-avatar">A</div>
+      <span class="topbar-profile-name" id="tb-name">Admin</span>
+      <span style="font-size:10px;color:var(--text-muted);">▾</span>
+      <div class="profile-dropdown" id="profile-dropdown">
+        <a href="./index.html" class="dropdown-item">🏠 Back to App</a>
+        <button class="dropdown-item danger" onclick="handleSignOut()">🚪 Sign Out</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="admin-body">
+
+    <!-- ── ADMIN SIDEBAR ── -->
+    <aside class="admin-sidebar">
+      <div class="admin-nav-group">
+        <div class="admin-nav-group-label">Overview</div>
+        <button class="admin-nav-item active" onclick="showSection('dashboard')">
+          <span class="admin-nav-icon">📊</span> Dashboard
+        </button>
+      </div>
+      <div class="admin-nav-group">
+        <div class="admin-nav-group-label">Management</div>
+        <button class="admin-nav-item" onclick="showSection('users')">
+          <span class="admin-nav-icon">👥</span> Users
+        </button>
+        <button class="admin-nav-item" onclick="showSection('questions')">
+          <span class="admin-nav-icon">❓</span> Questions
+        </button>
+        <button class="admin-nav-item" onclick="showSection('modules')">
+          <span class="admin-nav-icon">📚</span> Modules & Chapters
+        </button>
+        <button class="admin-nav-item" onclick="showSection('codes')">
+          <span class="admin-nav-icon">🎟️</span> Registry Codes
+        </button>
+      </div>
+      <div class="admin-nav-group">
+        <div class="admin-nav-group-label">Insights</div>
+        <button class="admin-nav-item" onclick="showSection('analytics')">
+          <span class="admin-nav-icon">📈</span> Analytics
+        </button>
+      </div>
+    </aside>
+
+    <!-- ── MAIN CONTENT ── -->
+    <main class="admin-main">
+
+      <!-- ════════════════════════════════
+           SECTION: DASHBOARD
+           ════════════════════════════════ -->
+      <div class="admin-section active" id="section-dashboard">
+
+        <div class="section-header">
+          <div>
+            <div class="section-title">Dashboard</div>
+            <div class="section-sub">Overview of your MedMCQ platform.</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost btn-sm" onclick="showSection('users')">Manage Users</button>
+            <button class="btn btn-primary btn-sm" onclick="showSection('questions')">+ Add Question</button>
+          </div>
+        </div>
+
+        <!-- User stats -->
+        <div class="stat-row" id="dash-user-stats">
+          <div class="stat-card skeleton" style="height:100px;"></div>
+          <div class="stat-card skeleton stagger-1" style="height:100px;"></div>
+          <div class="stat-card skeleton stagger-2" style="height:100px;"></div>
+          <div class="stat-card skeleton stagger-3" style="height:100px;"></div>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="quick-actions">
+          <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-user')">👤 Add User</button>
+          <button class="btn btn-outline-cyan btn-sm" onclick="showSection('questions')">❓ Add Question</button>
+          <button class="btn btn-ghost btn-sm" onclick="showSection('codes');openGenerateCode()">🎟️ Generate Code</button>
+          <button class="btn btn-ghost btn-sm" onclick="showSection('analytics')">📈 View Analytics</button>
+        </div>
+
+        <div class="admin-dash-grid">
+
+          <!-- Question stats -->
+          <div class="form-card">
+            <div class="form-card-title">❓ Question Stats</div>
+            <div id="dash-q-stats">
+              <div class="skeleton" style="height:14px;border-radius:4px;margin-bottom:8px;"></div>
+              <div class="skeleton" style="height:14px;border-radius:4px;margin-bottom:8px;width:70%;"></div>
+              <div class="skeleton" style="height:14px;border-radius:4px;width:50%;"></div>
+            </div>
+          </div>
+
+          <!-- Top failed -->
+          <div class="form-card">
+            <div class="form-card-title">🔥 Top Failed Questions</div>
+            <div id="dash-top-failed">
+              <div class="skeleton" style="height:48px;border-radius:8px;margin-bottom:8px;"></div>
+              <div class="skeleton stagger-1" style="height:48px;border-radius:8px;margin-bottom:8px;"></div>
+              <div class="skeleton stagger-2" style="height:48px;border-radius:8px;"></div>
+            </div>
+          </div>
+
+          <!-- Module performance -->
+          <div class="form-card full">
+            <div class="form-card-title">📚 Module Performance</div>
+            <div id="dash-module-perf">
+              <div class="skeleton" style="height:40px;border-radius:6px;margin-bottom:10px;"></div>
+              <div class="skeleton stagger-1" style="height:40px;border-radius:6px;margin-bottom:10px;"></div>
+              <div class="skeleton stagger-2" style="height:40px;border-radius:6px;"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════
+           SECTION: USERS
+           ════════════════════════════════ -->
+      <div class="admin-section" id="section-users">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Users</div>
+            <div class="section-sub">Manage registered users, grades, and access.</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-user')">+ Add User</button>
+        </div>
+
+        <div class="data-table-wrap">
+          <div class="data-table-toolbar">
+            <div class="data-table-title">All Users</div>
+            <div class="toolbar-actions">
+              <input class="search-input" type="text" placeholder="Search email or name…" id="user-search" oninput="filterUsers()">
+              <select class="filter-select" id="user-filter" onchange="filterUsers()">
+                <option value="all">All users</option>
+                <option value="active">Active today</option>
+                <option value="inactive">Inactive 7+ days</option>
+              </select>
+            </div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Name / Email</th>
+                  <th>Joined</th>
+                  <th>Attempts</th>
+                  <th>Avg Score</th>
+                  <th>Badges</th>
+                  <th>Last Active</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="users-tbody">
+                <tr><td colspan="8" style="text-align:center;padding:40px;">
+                  <div class="skeleton" style="height:14px;width:60%;margin:0 auto 8px;border-radius:4px;"></div>
+                  <div class="skeleton stagger-1" style="height:14px;width:80%;margin:0 auto;border-radius:4px;"></div>
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Danger zone -->
+        <div class="form-card" style="border-color:rgba(240,64,96,0.2);">
+          <div class="form-card-title" style="color:var(--danger);">⚠️ Danger Zone</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="btn btn-sm" style="background:rgba(240,64,96,0.08);color:var(--danger);border:1px solid rgba(240,64,96,0.2);" onclick="confirmAction('Reset ALL grades for all users?', resetAllGrades)">
+              🗑️ Reset All Grades
+            </button>
+            <button class="btn btn-sm" style="background:rgba(240,64,96,0.08);color:var(--danger);border:1px solid rgba(240,64,96,0.2);" onclick="confirmAction('Reset ALL badges for all users?', resetAllBadges)">
+              🏅 Reset All Badges
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════
+           SECTION: QUESTIONS
+           ════════════════════════════════ -->
+      <div class="admin-section" id="section-questions">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Questions</div>
+            <div class="section-sub">Add, edit, or bulk import questions.</div>
+          </div>
+        </div>
+
+        <!-- Single add form -->
+        <div class="form-card">
+          <div class="form-card-title">➕ Add Single Question</div>
+          <div class="form-grid cols-3" style="margin-bottom:16px;">
+            <div class="form-group">
+              <label class="form-label">Module</label>
+              <select class="form-select" id="q-module" onchange="loadChaptersForForm()">
+                <option value="">Select module…</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Chapter</label>
+              <select class="form-select" id="q-chapter">
+                <option value="">Select chapter…</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Difficulty</label>
+              <select class="form-select" id="q-difficulty">
+                <option value="easy">Easy (1pt)</option>
+                <option value="medium" selected>Medium (2pt)</option>
+                <option value="hard">Hard (4pt)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid cols-1" style="margin-bottom:16px;">
+            <div class="form-group">
+              <label class="form-label">Question Text</label>
+              <textarea class="form-textarea" id="q-text" placeholder="Enter the question…" style="min-height:60px;"></textarea>
+            </div>
+          </div>
+
+          <!-- 5 Options -->
+          <div class="form-group" style="margin-bottom:16px;">
+            <label class="form-label">Options (tick correct answers)</label>
+            <div class="options-grid">
+              <div class="option-row">
+                <span class="option-label">A</span>
+                <input class="form-input" type="text" id="opt-0" placeholder="Option A">
+                <div class="correct-toggle" id="ct-0" onclick="toggleCorrect(0)" title="Mark correct">✓</div>
+              </div>
+              <div class="option-row">
+                <span class="option-label">B</span>
+                <input class="form-input" type="text" id="opt-1" placeholder="Option B">
+                <div class="correct-toggle" id="ct-1" onclick="toggleCorrect(1)" title="Mark correct">✓</div>
+              </div>
+              <div class="option-row">
+                <span class="option-label">C</span>
+                <input class="form-input" type="text" id="opt-2" placeholder="Option C">
+                <div class="correct-toggle" id="ct-2" onclick="toggleCorrect(2)" title="Mark correct">✓</div>
+              </div>
+              <div class="option-row">
+                <span class="option-label">D</span>
+                <input class="form-input" type="text" id="opt-3" placeholder="Option D">
+                <div class="correct-toggle" id="ct-3" onclick="toggleCorrect(3)" title="Mark correct">✓</div>
+              </div>
+              <div class="option-row">
+                <span class="option-label">E</span>
+                <input class="form-input" type="text" id="opt-4" placeholder="Option E">
+                <div class="correct-toggle" id="ct-4" onclick="toggleCorrect(4)" title="Mark correct">✓</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-grid" style="margin-bottom:16px;">
+            <div class="form-group">
+              <label class="form-label">Explanation (optional)</label>
+              <textarea class="form-textarea" id="q-explanation" placeholder="Explain the answer…"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Drive Link (optional)</label>
+              <input class="form-input" type="url" id="q-drive" placeholder="https://drive.google.com/…">
+              <label class="form-label" style="margin-top:10px;">Image URL (optional)</label>
+              <input class="form-input" type="url" id="q-image" placeholder="https://…">
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;align-items:center;">
+            <button class="btn btn-primary" onclick="saveQuestion()">💾 Save Question</button>
+            <button class="btn btn-ghost btn-sm" onclick="clearQuestionForm()">Clear</button>
+            <span id="q-save-msg" style="font-size:13px;color:var(--success);display:none;">✅ Saved!</span>
+          </div>
+        </div>
+
+        <!-- Bulk upload -->
+        <div class="form-card">
+          <div class="form-card-title">📦 Bulk Import</div>
+          <div class="upload-zone" id="upload-zone"
+               ondragover="event.preventDefault();this.classList.add('dragover')"
+               ondragleave="this.classList.remove('dragover')"
+               ondrop="handleFileDrop(event)"
+               onclick="document.getElementById('bulk-file-input').click()">
+            <span class="upload-icon">📂</span>
+            <div class="upload-title">Drop CSV, JSON or Excel file here</div>
+            <div class="upload-sub">or click to browse · JSON and CSV/Excel supported</div>
+          </div>
+          <input type="file" id="bulk-file-input" accept=".json,.csv,.xlsx,.xls" style="display:none;" onchange="handleFileSelect(event)">
+          <div class="validation-result" id="upload-validation"></div>
+          <div class="upload-preview" id="upload-preview"></div>
+          <div style="margin-top:12px;display:none;" id="upload-actions">
+            <button class="btn btn-primary btn-sm" onclick="confirmBulkUpload()">⬆️ Upload All</button>
+            <button class="btn btn-ghost btn-sm" onclick="clearUpload()">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Questions table -->
+        <div class="data-table-wrap">
+          <div class="data-table-toolbar">
+            <div class="data-table-title">All Questions</div>
+            <div class="toolbar-actions">
+              <input class="search-input" type="text" placeholder="Search question text…" id="q-search" oninput="filterQuestions()">
+              <select class="filter-select" id="q-module-filter" onchange="filterQuestions()">
+                <option value="">All modules</option>
+              </select>
+              <select class="filter-select" id="q-diff-filter" onchange="filterQuestions()">
+                <option value="">All difficulties</option>
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Question</th>
+                  <th>Module</th>
+                  <th>Chapter</th>
+                  <th>Difficulty</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="questions-tbody">
+                <tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">
+                  Select a section to load questions.
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════
+           SECTION: MODULES & CHAPTERS
+           ════════════════════════════════ -->
+      <div class="admin-section" id="section-modules">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Modules & Chapters</div>
+            <div class="section-sub">Create and manage modules, chapters, and coefficients.</div>
+          </div>
+        </div>
+
+        <div class="admin-dash-grid">
+          <!-- Add module -->
+          <div class="form-card">
+            <div class="form-card-title">📚 Add Module</div>
+            <div class="form-group" style="margin-bottom:12px;">
+              <label class="form-label">Module Name</label>
+              <input class="form-input" type="text" id="new-module-name" placeholder="e.g. Anatomy">
+            </div>
+            <div class="form-group" style="margin-bottom:16px;">
+              <label class="form-label">Coefficient (grade weight)</label>
+              <input class="form-input" type="number" id="new-module-coeff" value="1" min="1" max="10">
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="saveModule()">Save Module</button>
+          </div>
+
+          <!-- Add chapter -->
+          <div class="form-card">
+            <div class="form-card-title">📖 Add Chapter</div>
+            <div class="form-group" style="margin-bottom:12px;">
+              <label class="form-label">Module</label>
+              <select class="form-select" id="new-chapter-module">
+                <option value="">Select module…</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:16px;">
+              <label class="form-label">Chapter Name</label>
+              <input class="form-input" type="text" id="new-chapter-name" placeholder="e.g. Upper Limb">
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="saveChapter()">Save Chapter</button>
+          </div>
+
+          <!-- Modules list -->
+          <div class="data-table-wrap full" style="margin-bottom:0;">
+            <div class="data-table-toolbar">
+              <div class="data-table-title">All Modules</div>
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Coefficient</th>
+                  <th>Chapters</th>
+                  <th>Questions</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="modules-tbody">
+                <tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted);">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════
+           SECTION: CODES
+           ════════════════════════════════ -->
+      <div class="admin-section" id="section-codes">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Registry Codes</div>
+            <div class="section-sub">Generate and manage invite codes for new users.</div>
+          </div>
+        </div>
+
+        <!-- Generate code -->
+        <div class="form-card">
+          <div class="form-card-title">🎟️ Generate Invite Codes</div>
+          <div class="form-grid" style="margin-bottom:16px;">
+            <div class="form-group">
+              <label class="form-label">Quantity</label>
+              <input class="form-input" type="number" id="code-qty" value="1" min="1" max="50">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Expiry Date (optional)</label>
+              <input class="form-input" type="date" id="code-expiry">
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="generateCodes()">Generate Codes</button>
+
+          <!-- Generated codes display -->
+          <div id="generated-codes-list" style="margin-top:16px;"></div>
+        </div>
+
+        <!-- Codes table -->
+        <div class="data-table-wrap">
+          <div class="data-table-toolbar">
+            <div class="data-table-title">All Codes</div>
+            <div class="toolbar-actions">
+              <select class="filter-select" id="codes-filter" onchange="filterCodes()">
+                <option value="all">All codes</option>
+                <option value="unused">Unused</option>
+                <option value="used">Used</option>
+              </select>
+            </div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Generated</th>
+                  <th>Expires</th>
+                  <th>Used By</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="codes-tbody">
+                <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted);">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════
+           SECTION: ANALYTICS
+           ════════════════════════════════ -->
+      <div class="admin-section" id="section-analytics">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Analytics</div>
+            <div class="section-sub">Platform-wide performance insights.</div>
+          </div>
+        </div>
+
+        <div class="stat-row" id="analytics-stats">
+          <div class="stat-card skeleton" style="height:100px;"></div>
+          <div class="stat-card skeleton stagger-1" style="height:100px;"></div>
+          <div class="stat-card skeleton stagger-2" style="height:100px;"></div>
+        </div>
+
+        <div class="admin-dash-grid">
+
+          <div class="form-card">
+            <div class="form-card-title">📉 Top 5 Failed Questions</div>
+            <div id="analytics-top-failed">
+              <div class="skeleton" style="height:52px;border-radius:8px;margin-bottom:8px;"></div>
+              <div class="skeleton stagger-1" style="height:52px;border-radius:8px;margin-bottom:8px;"></div>
+              <div class="skeleton stagger-2" style="height:52px;border-radius:8px;"></div>
+            </div>
+          </div>
+
+          <div class="form-card">
+            <div class="form-card-title">📚 Avg Score per Module</div>
+            <div id="analytics-module-scores">
+              <div class="skeleton" style="height:40px;border-radius:6px;margin-bottom:10px;"></div>
+              <div class="skeleton stagger-1" style="height:40px;border-radius:6px;margin-bottom:10px;"></div>
+              <div class="skeleton stagger-2" style="height:40px;border-radius:6px;"></div>
+            </div>
+          </div>
+
+          <div class="form-card full">
+            <div class="form-card-title">⚠️ Needs Attention — Questions Often Failed</div>
+            <div id="analytics-attention">
+              <div class="skeleton" style="height:48px;border-radius:8px;margin-bottom:8px;"></div>
+              <div class="skeleton stagger-1" style="height:48px;border-radius:8px;margin-bottom:8px;"></div>
+              <div class="skeleton stagger-2" style="height:48px;border-radius:8px;"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ── MODALS ── -->
+
+<!-- Add User Modal -->
+<div class="admin-modal-backdrop" id="modal-add-user" style="display:none;">
+  <div class="admin-modal">
+    <div class="modal-header">
+      <div class="modal-title">👤 Add User Manually</div>
+      <button class="modal-close" onclick="closeModal('modal-add-user')">✕</button>
+    </div>
+    <div class="form-grid cols-1">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input class="form-input" type="text" id="new-user-name" placeholder="Dr. Future">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" id="new-user-email" placeholder="user@email.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Temporary Password</label>
+        <input class="form-input" type="text" id="new-user-password" placeholder="Min 8 chars">
+      </div>
+    </div>
+    <div style="margin-top:20px;display:flex;gap:10px;">
+      <button class="btn btn-primary" onclick="createUser()">Create User</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-add-user')">Cancel</button>
+    </div>
+    <div id="add-user-msg" style="margin-top:10px;font-size:13px;display:none;"></div>
+  </div>
+</div>
+
+<!-- Edit Question Modal -->
+<div class="admin-modal-backdrop" id="modal-edit-question" style="display:none;">
+  <div class="admin-modal">
+    <div class="modal-header">
+      <div class="modal-title">✏️ Edit Question</div>
+      <button class="modal-close" onclick="closeModal('modal-edit-question')">✕</button>
+    </div>
+    <div id="edit-question-form">
+      <!-- Populated dynamically -->
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="admin-modal-backdrop" id="modal-confirm" style="display:none;">
+  <div class="admin-modal" style="max-width:400px;">
+    <div class="modal-header">
+      <div class="modal-title">⚠️ Confirm Action</div>
+      <button class="modal-close" onclick="closeModal('modal-confirm')">✕</button>
+    </div>
+    <div id="confirm-message" style="font-size:14px;color:var(--text-secondary);margin-bottom:24px;line-height:1.6;"></div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-sm" style="background:var(--danger);color:white;" id="confirm-yes-btn">Confirm</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-confirm')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-container" id="toast-container"></div>
+
+<script type="module">
+  import {
+    supabase,
+    requireAdmin,
+    getCurrentProfile,
+    getModules,
+    getChaptersByModule,
+    signOut
+  } from './js/supabase.js';
+
+  // ── State ──────────────────────────────────────────────────────
+  let currentProfile = null;
+  let allModules     = [];
+  let allUsers       = [];
+  let allQuestions   = [];
+  let allCodes       = [];
+  let correctToggles = [false, false, false, false, false];
+  let pendingUploadData = null;
+  let pendingConfirmFn  = null;
+
+  // ── Boot ───────────────────────────────────────────────────────
+  async function init() {
+    currentProfile = await requireAdmin();
+    if (!currentProfile) return;
+
+    const name     = currentProfile.name || 'Admin';
+    const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    document.getElementById('tb-avatar').textContent = initials;
+    document.getElementById('tb-name').textContent   = name;
+
+    allModules = await getModules();
+    populateModuleSelects();
+
+    loadTopBarStats();
+    loadDashboard();
+  }
+
+  // ── Section navigation ─────────────────────────────────────────
+  window.showSection = function(name) {
+    document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.admin-nav-item').forEach(b => b.classList.remove('active'));
+    document.getElementById(`section-${name}`).classList.add('active');
+    document.querySelectorAll('.admin-nav-item').forEach(b => {
+      if (b.textContent.toLowerCase().includes(name.split('-')[0].toLowerCase())) {
+        b.classList.add('active');
+      }
+    });
+
+    // Lazy load sections
+    if (name === 'users')     loadUsers();
+    if (name === 'questions') loadQuestions();
+    if (name === 'modules')   loadModulesTable();
+    if (name === 'codes')     loadCodes();
+    if (name === 'analytics') loadAnalytics();
+  };
+
+  // ── Populate module selects ────────────────────────────────────
+  function populateModuleSelects() {
+    const selects = ['q-module', 'new-chapter-module', 'q-module-filter'];
+    selects.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.innerHTML = id === 'q-module-filter'
+        ? '<option value="">All modules</option>'
+        : '<option value="">Select module…</option>';
+      allModules.forEach(m => {
+        const o = document.createElement('option');
+        o.value = m.id; o.textContent = m.name;
+        el.appendChild(o);
+      });
+    });
+  }
+
+  // ── Top bar stats ──────────────────────────────────────────────
+  async function loadTopBarStats() {
+    const { count: userCount } = await supabase.from('users').select('id', { count: 'exact', head: true });
+    const today = new Date().toISOString().split('T')[0];
+    const { count: activeCount } = await supabase.from('users').select('id', { count: 'exact', head: true })
+      .gte('last_active', today);
+    const { count: unusedCodes } = await supabase.from('invite_codes').select('id', { count: 'exact', head: true })
+      .eq('used', false);
+
+    document.getElementById('tb-users').textContent  = userCount || 0;
+    document.getElementById('tb-active').textContent = activeCount || 0;
+    document.getElementById('tb-codes').textContent  = unusedCodes || 0;
+  }
+
+  // ── Dashboard ──────────────────────────────────────────────────
+  async function loadDashboard() {
+    // User stats
+    const { count: totalUsers }   = await supabase.from('users').select('id', { count: 'exact', head: true });
+    const today = new Date().toISOString().split('T')[0];
+    const { count: activeToday }  = await supabase.from('users').select('id', { count: 'exact', head: true }).gte('last_active', today);
+    const sevenDaysAgo = new Date(Date.now() - 7*24*60*60*1000).toISOString();
+    const { count: inactiveUsers } = await supabase.from('users').select('id', { count: 'exact', head: true })
+      .lt('last_active', sevenDaysAgo);
+    const { count: totalQ } = await supabase.from('questions').select('id', { count: 'exact', head: true });
+
+    document.getElementById('dash-user-stats').innerHTML = `
+      <div class="stat-card animate-in"><span class="stat-card-icon">👥</span><div class="stat-card-val">${totalUsers||0}</div><div class="stat-card-label">Total Users</div></div>
+      <div class="stat-card animate-in stagger-1"><span class="stat-card-icon">🟢</span><div class="stat-card-val">${activeToday||0}</div><div class="stat-card-label">Active Today</div></div>
+      <div class="stat-card animate-in stagger-2"><span class="stat-card-icon">😴</span><div class="stat-card-val">${inactiveUsers||0}</div><div class="stat-card-label">Inactive 7d+</div></div>
+      <div class="stat-card animate-in stagger-3"><span class="stat-card-icon">❓</span><div class="stat-card-val">${totalQ||0}</div><div class="stat-card-label">Total Questions</div></div>
+    `;
+
+    // Question stats per module
+    const qStats = document.getElementById('dash-q-stats');
+    if (allModules.length === 0) {
+      qStats.innerHTML = `<div class="text-muted text-sm">No modules yet.</div>`;
+    } else {
+      const rows = await Promise.all(allModules.map(async m => {
+        const { count } = await supabase.from('questions').select('id', { count: 'exact', head: true }).eq('module_id', m.id);
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border-soft);">
+          <span style="font-size:13px;color:var(--text-primary);">${m.name}</span>
+          <span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--cyan-dark);">${count||0}q</span>
+        </div>`;
+      }));
+      qStats.innerHTML = rows.join('');
+    }
+
+    // Top failed
+    loadTopFailed('dash-top-failed', 3);
+
+    // Module performance
+    loadModulePerformance('dash-module-perf');
+  }
+
+  async function loadTopFailed(containerId, limit = 5) {
+    const container = document.getElementById(containerId);
+    const { data } = await supabase
+      .from('question_progress')
+      .select('times_wrong, questions(text, chapters(name))')
+      .gte('times_wrong', 1)
+      .order('times_wrong', { ascending: false })
+      .limit(limit);
+
+    if (!data || data.length === 0) {
+      container.innerHTML = `<div class="admin-empty"><span class="admin-empty-icon">✅</span>No failed questions yet.</div>`;
+      return;
+    }
+
+    container.innerHTML = data.map((r, i) => `
+      <div class="failed-q-item">
+        <div class="failed-rank">#${i+1}</div>
+        <div style="flex:1;min-width:0;">
+          <div class="failed-q-text">${r.questions?.text || 'Unknown'}</div>
+          <div class="failed-q-meta">${r.questions?.chapters?.name || '—'}</div>
+        </div>
+        <div class="failed-count">${r.times_wrong}✗</div>
+      </div>
+    `).join('');
+  }
+
+  async function loadModulePerformance(containerId) {
+    const container = document.getElementById(containerId);
+    if (allModules.length === 0) {
+      container.innerHTML = `<div class="text-muted text-sm">No modules yet.</div>`;
+      return;
+    }
+
+    const rows = await Promise.all(allModules.map(async m => {
+      const { data } = await supabase.from('attempts').select('score_20').eq('module_id', m.id);
+      if (!data || data.length === 0) return { name: m.name, avg: 0, count: 0 };
+      const avg = data.reduce((s, a) => s + (a.score_20 || 0), 0) / data.length;
+      return { name: m.name, avg, count: data.length };
+    }));
+
+    container.innerHTML = rows.map(r => `
+      <div class="module-perf-item">
+        <div class="module-perf-top">
+          <span class="module-perf-name">${r.name}</span>
+          <span class="module-perf-val">${r.avg.toFixed(1)}/20 · ${r.count} attempt${r.count !== 1 ? 's' : ''}</span>
+        </div>
+        <div class="module-perf-bar">
+          <div class="module-perf-fill" style="width:${(r.avg/20)*100}%;"></div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ── Users ──────────────────────────────────────────────────────
+  async function loadUsers() {
+    const { data } = await supabase.from('users').select('*').order('created_at', { ascending: false });
+    allUsers = data || [];
+    renderUsersTable(allUsers);
+  }
+
+  function renderUsersTable(users) {
+    const tbody = document.getElementById('users-tbody');
+    if (users.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8"><div class="admin-empty"><span class="admin-empty-icon">👥</span>No users found.</div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = users.map(u => {
+      const daysSince = u.last_active
+        ? Math.floor((Date.now() - new Date(u.last_active)) / 86400000) : 999;
+      const status = daysSince === 0 ? 'active' : daysSince < 7 ? 'inactive' : 'expired';
+      const statusLabel = daysSince === 0 ? 'Active today' : daysSince < 7 ? `${daysSince}d ago` : `${daysSince}d ago`;
+
+      return `
+        <tr>
+          <td>
+            <div style="font-weight:600;font-size:13px;">${u.name || '—'}</div>
+            <div style="font-size:11px;color:var(--text-muted);">${u.email}</div>
+          </td>
+          <td style="font-size:12px;color:var(--text-muted);">${formatDate(u.created_at)}</td>
+          <td>—</td>
+          <td>—</td>
+          <td>—</td>
+          <td style="font-size:12px;color:var(--text-muted);">${formatDate(u.last_active)}</td>
+          <td><span class="status-dot ${status}">${statusLabel}</span></td>
+          <td>
+            <div class="row-actions">
+              <button class="action-btn" onclick="resetUserGrades('${u.id}')">Reset grades</button>
+              <button class="action-btn danger" onclick="confirmAction('Delete user ${u.email}?', () => deleteUser('${u.id}'))">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  window.filterUsers = function() {
+    const search = document.getElementById('user-search').value.toLowerCase();
+    const filter = document.getElementById('user-filter').value;
+    let filtered = allUsers.filter(u =>
+      (u.email || '').toLowerCase().includes(search) ||
+      (u.name || '').toLowerCase().includes(search)
+    );
+    if (filter === 'active') {
+      const today = new Date().toISOString().split('T')[0];
+      filtered = filtered.filter(u => u.last_active && u.last_active.startsWith(today));
+    } else if (filter === 'inactive') {
+      const sevenAgo = Date.now() - 7*86400000;
+      filtered = filtered.filter(u => !u.last_active || new Date(u.last_active) < sevenAgo);
+    }
+    renderUsersTable(filtered);
+  };
+
+  window.resetUserGrades = async function(userId) {
+    confirmAction('Reset grades for this user?', async () => {
+      showToast('Grade reset is handled by admin SQL reset — implement per semester.', 'info');
+    });
+  };
+
+  window.deleteUser = async function(userId) {
+    const { error } = await supabase.from('users').delete().eq('id', userId);
+    if (error) { showToast('Error deleting user.', 'error'); return; }
+    showToast('User deleted.', 'success');
+    loadUsers();
+  };
+
+  window.resetAllGrades = function() {
+    showToast('All grades reset. (Implement per-semester SQL reset in production.)', 'success');
+  };
+
+  window.resetAllBadges = async function() {
+    await supabase.from('badges').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    showToast('All badges cleared.', 'success');
+  };
+
+  // Create user
+  window.createUser = async function() {
+    const name     = document.getElementById('new-user-name').value.trim();
+    const email    = document.getElementById('new-user-email').value.trim();
+    const password = document.getElementById('new-user-password').value;
+    const msg      = document.getElementById('add-user-msg');
+
+    if (!name || !email || !password) { showToast('Fill all fields.', 'error'); return; }
+
+    const { data, error } = await supabase.auth.admin?.createUser
+      ? await supabase.auth.admin.createUser({ email, password, user_metadata: { name }, email_confirm: true })
+      : { error: { message: 'Admin user creation requires service role key.' } };
+
+    if (error) {
+      msg.textContent = '⚠️ ' + error.message;
+      msg.style.color = 'var(--danger)';
+      msg.style.display = 'block';
+      return;
+    }
+
+    msg.textContent = '✅ User created!';
+    msg.style.color = 'var(--success)';
+    msg.style.display = 'block';
+    setTimeout(() => closeModal('modal-add-user'), 1200);
+    loadUsers();
+  };
+
+  // ── Questions ──────────────────────────────────────────────────
+  async function loadQuestions() {
+    const { data } = await supabase
+      .from('questions')
+      .select('*, modules(name), chapters(name)')
+      .order('created_at', { ascending: false });
+    allQuestions = data || [];
+    renderQuestionsTable(allQuestions);
+  }
+
+  function renderQuestionsTable(questions) {
+    const tbody = document.getElementById('questions-tbody');
+    if (questions.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5"><div class="admin-empty"><span class="admin-empty-icon">❓</span>No questions yet.</div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = questions.map(q => {
+      const diffClass = { easy: 'diff-easy', medium: 'diff-medium', hard: 'diff-hard' }[q.difficulty] || '';
+      const short = q.text?.length > 60 ? q.text.slice(0, 57) + '…' : q.text;
+      return `
+        <tr>
+          <td style="max-width:300px;">
+            <div style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${short}</div>
+          </td>
+          <td style="font-size:12px;">${q.modules?.name || '—'}</td>
+          <td style="font-size:12px;">${q.chapters?.name || '—'}</td>
+          <td><span class="badge ${diffClass}">${q.difficulty}</span></td>
+          <td>
+            <div class="row-actions">
+              <button class="action-btn" onclick="editQuestion('${q.id}')">Edit</button>
+              <button class="action-btn danger" onclick="confirmAction('Delete this question?', () => deleteQuestion('${q.id}'))">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  window.filterQuestions = function() {
+    const search = document.getElementById('q-search').value.toLowerCase();
+    const module = document.getElementById('q-module-filter').value;
+    const diff   = document.getElementById('q-diff-filter').value;
+    const filtered = allQuestions.filter(q =>
+      (!search || (q.text || '').toLowerCase().includes(search)) &&
+      (!module || q.module_id === module) &&
+      (!diff   || q.difficulty === diff)
+    );
+    renderQuestionsTable(filtered);
+  };
+
+  window.toggleCorrect = function(i) {
+    correctToggles[i] = !correctToggles[i];
+    const el = document.getElementById(`ct-${i}`);
+    el.classList.toggle('active', correctToggles[i]);
+  };
+
+  window.saveQuestion = async function() {
+    const moduleId  = document.getElementById('q-module').value;
+    const chapterId = document.getElementById('q-chapter').value;
+    const text      = document.getElementById('q-text').value.trim();
+    const difficulty = document.getElementById('q-difficulty').value;
+    const explanation = document.getElementById('q-explanation').value.trim();
+    const driveLink = document.getElementById('q-drive').value.trim();
+    const imageUrl  = document.getElementById('q-image').value.trim();
+
+    if (!moduleId || !chapterId || !text) {
+      showToast('Module, chapter, and question text are required.', 'error'); return;
+    }
+
+    const options = [0,1,2,3,4].map(i => document.getElementById(`opt-${i}`).value.trim()).filter(Boolean);
+    const correctAnswers = options.filter((_, i) => correctToggles[i]);
+
+    if (options.length < 2) { showToast('Add at least 2 options.', 'error'); return; }
+    if (correctAnswers.length === 0) { showToast('Mark at least one correct answer.', 'error'); return; }
+
+    const points = { easy: 1, medium: 2, hard: 4 }[difficulty];
+
+    const { error } = await supabase.from('questions').insert({
+      module_id: moduleId,
+      chapter_id: chapterId,
+      difficulty,
+      points,
+      text,
+      options,
+      correct_answers: correctAnswers,
+      explanation: explanation || null,
+      drive_link: driveLink || null,
+      image_url: imageUrl || null,
+    });
+
+    if (error) { showToast('Error saving: ' + error.message, 'error'); return; }
+
+    const msg = document.getElementById('q-save-msg');
+    msg.style.display = 'inline';
+    setTimeout(() => { msg.style.display = 'none'; }, 2000);
+    showToast('Question saved!', 'success');
+    clearQuestionForm();
+    allQuestions = [];
+  };
+
+  window.clearQuestionForm = function() {
+    ['q-text','q-explanation','q-drive','q-image'].forEach(id => document.getElementById(id).value = '');
+    [0,1,2,3,4].forEach(i => {
+      document.getElementById(`opt-${i}`).value = '';
+      correctToggles[i] = false;
+      document.getElementById(`ct-${i}`).classList.remove('active');
+    });
+  };
+
+  window.deleteQuestion = async function(id) {
+    await supabase.from('questions').delete().eq('id', id);
+    showToast('Question deleted.', 'success');
+    loadQuestions();
+  };
+
+  window.editQuestion = function(id) {
+    const q = allQuestions.find(x => x.id === id);
+    if (!q) return;
+    const form = document.getElementById('edit-question-form');
+    form.innerHTML = `
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">Question Text</label>
+        <textarea class="form-textarea" id="eq-text">${q.text}</textarea>
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">Difficulty</label>
+        <select class="form-select" id="eq-diff">
+          <option value="easy" ${q.difficulty==='easy'?'selected':''}>Easy</option>
+          <option value="medium" ${q.difficulty==='medium'?'selected':''}>Medium</option>
+          <option value="hard" ${q.difficulty==='hard'?'selected':''}>Hard</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:16px;">
+        <label class="form-label">Explanation</label>
+        <textarea class="form-textarea" id="eq-explanation">${q.explanation||''}</textarea>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-primary btn-sm" onclick="updateQuestion('${id}')">Save Changes</button>
+        <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-edit-question')">Cancel</button>
+      </div>
+    `;
+    openModal('modal-edit-question');
+  };
+
+  window.updateQuestion = async function(id) {
+    const text        = document.getElementById('eq-text').value.trim();
+    const difficulty  = document.getElementById('eq-diff').value;
+    const explanation = document.getElementById('eq-explanation').value.trim();
+    const points      = { easy: 1, medium: 2, hard: 4 }[difficulty];
+
+    const { error } = await supabase.from('questions').update({ text, difficulty, points, explanation }).eq('id', id);
+    if (error) { showToast('Error updating.', 'error'); return; }
+    showToast('Question updated.', 'success');
+    closeModal('modal-edit-question');
+    loadQuestions();
+  };
+
+  // Chapter select populate
+  window.loadChaptersForForm = async function() {
+    const moduleId = document.getElementById('q-module').value;
+    const sel = document.getElementById('q-chapter');
+    sel.innerHTML = '<option value="">Loading…</option>';
+    if (!moduleId) { sel.innerHTML = '<option value="">Select chapter…</option>'; return; }
+    const chapters = await getChaptersByModule(moduleId);
+    sel.innerHTML = '<option value="">Select chapter…</option>';
+    chapters.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c.id; o.textContent = c.name;
+      sel.appendChild(o);
+    });
+  };
+
+  // ── Bulk upload ────────────────────────────────────────────────
+  window.handleFileDrop = function(e) {
+    e.preventDefault();
+    document.getElementById('upload-zone').classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) processUploadFile(file);
+  };
+
+  window.handleFileSelect = function(e) {
+    const file = e.target.files[0];
+    if (file) processUploadFile(file);
+  };
+
+  async function processUploadFile(file) {
+    const preview   = document.getElementById('upload-preview');
+    const validation = document.getElementById('upload-validation');
+    const actions   = document.getElementById('upload-actions');
+
+    if (file.name.endsWith('.json')) {
+      const text = await file.text();
+      try {
+        const data = JSON.parse(text);
+        if (!Array.isArray(data)) throw new Error('Root must be an array');
+        pendingUploadData = data;
+        preview.textContent = JSON.stringify(data.slice(0, 3), null, 2) + (data.length > 3 ? `\n… and ${data.length - 3} more` : '');
+        preview.classList.add('show');
+        validation.className = 'validation-result ok show';
+        validation.innerHTML = `✅ Valid JSON — ${data.length} questions ready to import`;
+        actions.style.display = 'block';
+      } catch(err) {
+        validation.className = 'validation-result err show';
+        validation.innerHTML = `⚠️ Invalid JSON: ${err.message}`;
+      }
+    } else if (file.name.endsWith('.csv')) {
+      const text = await file.text();
+      const lines = text.trim().split('\n');
+      pendingUploadData = lines.slice(1).map(line => {
+        const [module, chapter, difficulty, points, text_, opt1, opt2, opt3, opt4, opt5, correct_answers, explanation, drive_link] = line.split(',');
+        return { module, chapter, difficulty, points: parseInt(points), text: text_, options: [opt1,opt2,opt3,opt4,opt5].filter(Boolean), correct_answers: correct_answers?.split(';').filter(Boolean), explanation, drive_link };
+      });
+      preview.textContent = lines.slice(0, 5).join('\n');
+      preview.classList.add('show');
+      validation.className = 'validation-result ok show';
+      validation.innerHTML = `✅ CSV parsed — ${pendingUploadData.length} rows ready`;
+      actions.style.display = 'block';
+    } else {
+      validation.className = 'validation-result err show';
+      validation.innerHTML = '⚠️ Unsupported file type. Use JSON or CSV.';
+    }
+  }
+
+  window.confirmBulkUpload = async function() {
+    if (!pendingUploadData || pendingUploadData.length === 0) return;
+    showToast(`Importing ${pendingUploadData.length} questions…`, 'info');
+
+    let inserted = 0;
+    for (const q of pendingUploadData) {
+      const mod = allModules.find(m => m.name.toLowerCase() === (q.module || '').toLowerCase());
+      if (!mod) { console.warn(`Module not found: "${q.module}"`); continue; }
+      const chapters = await getChaptersByModule(mod.id);
+      const chapter  = chapters.find(c => c.name.toLowerCase() === (q.chapter || '').toLowerCase());
+      if (!chapter) { console.warn(`Chapter not found: "${q.chapter}"`); continue; }
+      const points = q.points || { easy: 1, medium: 2, hard: 4 }[q.difficulty] || 1;
+      const correct_answers = (q.correctIndices || []).map(i => q.options[i]);
+      const { error } = await supabase.from('questions').insert({
+        module_id: mod.id, chapter_id: chapter.id,
+        difficulty: q.difficulty || 'medium', points,
+        text: q.text, options: q.options,
+        correct_answers,
+        explanation: q.explanation || null,
+        drive_link: q.driveLink || q.drive_link || null,
+        image_url: q.imageUrl || q.image_url || null,
+      });
+      if (!error) inserted++;
+    }
+
+    showToast(`✅ Imported ${inserted} / ${pendingUploadData.length} questions.`, 'success');
+    clearUpload();
+    loadQuestions();
+  };
+
+  window.clearUpload = function() {
+    pendingUploadData = null;
+    document.getElementById('upload-preview').classList.remove('show');
+    document.getElementById('upload-validation').className = 'validation-result';
+    document.getElementById('upload-actions').style.display = 'none';
+    document.getElementById('bulk-file-input').value = '';
+  };
+
+  // ── Modules ────────────────────────────────────────────────────
+  async function loadModulesTable() {
+    const tbody = document.getElementById('modules-tbody');
+    const modules = await getModules();
+    allModules = modules;
+    populateModuleSelects();
+
+    if (modules.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5"><div class="admin-empty"><span class="admin-empty-icon">📚</span>No modules yet.</div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = '';
+    for (const m of modules) {
+      const { count: chapCount } = await supabase.from('chapters').select('id', { count: 'exact', head: true }).eq('module_id', m.id);
+      const { count: qCount }   = await supabase.from('questions').select('id', { count: 'exact', head: true }).eq('module_id', m.id);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="font-weight:600;">${m.name}</td>
+        <td>×${m.coefficient || 1}</td>
+        <td>${chapCount || 0}</td>
+        <td>${qCount || 0}</td>
+        <td>
+          <div class="row-actions">
+            <button class="action-btn danger" onclick="confirmAction('Delete module ${m.name}?', () => deleteModule('${m.id}'))">Delete</button>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    }
+  }
+
+  window.saveModule = async function() {
+    const name  = document.getElementById('new-module-name').value.trim();
+    const coeff = parseInt(document.getElementById('new-module-coeff').value) || 1;
+    if (!name) { showToast('Enter a module name.', 'error'); return; }
+    const { error } = await supabase.from('modules').insert({ name, coefficient: coeff });
+    if (error) { showToast('Error: ' + error.message, 'error'); return; }
+    showToast('Module created!', 'success');
+    document.getElementById('new-module-name').value = '';
+    allModules = await getModules();
+    populateModuleSelects();
+    loadModulesTable();
+  };
+
+  window.saveChapter = async function() {
+    const moduleId = document.getElementById('new-chapter-module').value;
+    const name     = document.getElementById('new-chapter-name').value.trim();
+    if (!moduleId || !name) { showToast('Select a module and enter chapter name.', 'error'); return; }
+    const { error } = await supabase.from('chapters').insert({ module_id: moduleId, name });
+    if (error) { showToast('Error: ' + error.message, 'error'); return; }
+    showToast('Chapter created!', 'success');
+    document.getElementById('new-chapter-name').value = '';
+    loadModulesTable();
+  };
+
+  window.deleteModule = async function(id) {
+    await supabase.from('modules').delete().eq('id', id);
+    showToast('Module deleted.', 'success');
+    allModules = await getModules();
+    populateModuleSelects();
+    loadModulesTable();
+  };
+
+  // ── Codes ──────────────────────────────────────────────────────
+  async function loadCodes() {
+    const { data } = await supabase
+      .from('invite_codes')
+      .select('*, users(name, email)')
+      .order('created_at', { ascending: false });
+    allCodes = data || [];
+    renderCodesTable(allCodes);
+  }
+
+  function renderCodesTable(codes) {
+    const tbody = document.getElementById('codes-tbody');
+    if (codes.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6"><div class="admin-empty"><span class="admin-empty-icon">🎟️</span>No codes yet.</div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = codes.map(c => {
+      const isExpired = c.expires_at && new Date(c.expires_at) < new Date();
+      const status = c.used ? 'expired' : isExpired ? 'expired' : 'active';
+      const statusLabel = c.used ? 'Used' : isExpired ? 'Expired' : 'Available';
+      return `
+        <tr>
+          <td><span class="code-pill ${c.used ? 'used' : ''}">${c.code}</span></td>
+          <td style="font-size:12px;color:var(--text-muted);">${formatDate(c.created_at)}</td>
+          <td style="font-size:12px;color:var(--text-muted);">${c.expires_at ? formatDate(c.expires_at) : '—'}</td>
+          <td style="font-size:12px;">${c.users?.email || '—'}</td>
+          <td><span class="status-dot ${status}">${statusLabel}</span></td>
+          <td>
+            <div class="row-actions">
+              ${!c.used ? `<button class="action-btn danger" onclick="confirmAction('Revoke code ${c.code}?', () => revokeCode('${c.id}'))">Revoke</button>` : ''}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  window.filterCodes = function() {
+    const filter = document.getElementById('codes-filter').value;
+    const filtered = filter === 'all' ? allCodes
+      : filter === 'used' ? allCodes.filter(c => c.used)
+      : allCodes.filter(c => !c.used);
+    renderCodesTable(filtered);
+  };
+  // Helper: generate a random invite code like MCQ-7G2X
+  function generateInviteCode() {
+    const part = Math.random().toString(36).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(2, 7);
+    return `MCQ-${part}`;
+  }
+
+  // Save a single invite code to the DB with optional expiry (ISO string or null)
+  async function saveInviteCode(code, expiresAt = null) {
+    const payload = { code, used: false, expires_at: expiresAt ? new Date(expiresAt).toISOString() : null };
+    const { data, error } = await supabase.from('invite_codes').insert(payload).select().single();
+    if (error) {
+      showToast('Error saving code: ' + error.message, 'error');
+      return null;
+    }
+    showToast(`Code ${code} saved.`, 'success');
+    // refresh lists
+    await loadCodes();
+    await loadTopBarStats();
+    return data;
+  }
+
+  // Load invite codes and render into the existing container(s)
+  async function loadInviteList() {
+    // Prefer a dedicated invite-list if present, otherwise fall back to codes table
+    const listContainer = document.getElementById('invite-list');
+    const showInTable = !listContainer;
+
+    const { data } = await supabase
+      .from('invite_codes')
+      .select('*, users(name, email)')
+      .order('created_at', { ascending: false });
+
+    const codes = data || [];
+
+    if (showInTable) {
+      // reuse existing renderer
+      allCodes = codes;
+      renderCodesTable(allCodes);
+      return;
+    }
+
+    // Render as a simple list into #invite-list
+    listContainer.innerHTML = codes.map(c => {
+      const usedBy = c.users?.email ? `<div style="font-size:12px;color:var(--text-muted);">Used by: ${c.users.email}</div>` : '';
+      const expires = c.expires_at ? formatDate(c.expires_at) : '—';
+      const status = c.used ? 'Used' : (c.expires_at && new Date(c.expires_at) < new Date() ? 'Expired' : 'Available');
+      return `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;border-bottom:1px solid var(--border-soft);">
+          <div>
+            <div style="font-weight:700;">${c.code}</div>
+            <div style="font-size:12px;color:var(--text-muted);">Expires: ${expires}</div>
+            ${usedBy}
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:12px;">${status}</div>
+            ${!c.used ? `<button class="action-btn danger" onclick="confirmAction('Revoke code ${c.code}?', () => revokeCode('${c.id}'))">Revoke</button>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Public wrappers
+  window.generateInviteCode = generateInviteCode;
+  window.saveInviteCode = saveInviteCode;
+  window.loadInviteList = loadInviteList;
+
+  // Updated generator to use helpers above and show generated codes
+  window.generateCodes = async function() {
+    const qty    = parseInt(document.getElementById('code-qty').value) || 1;
+    const expiry = document.getElementById('code-expiry').value || null;
+    const container = document.getElementById('generated-codes-list');
+
+    const codes = [];
+    for (let i = 0; i < Math.min(qty, 50); i++) {
+      const code = generateInviteCode();
+      const saved = await saveInviteCode(code, expiry);
+      if (saved) codes.push(code);
+    }
+
+    if (codes.length > 0) {
+      container.innerHTML = `
+        <div style="background:var(--cyan-wash);border:1px solid var(--border-cyan);border-radius:var(--radius-md);padding:16px 20px;">
+          <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px;">Generated Codes</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            ${codes.map(c => `<span class="code-pill">${c}</span>`).join('')}
+          </div>
+        </div>
+      `;
+    }
+  };
+
+  window.revokeCode = async function(id) {
+    await supabase.from('invite_codes').delete().eq('id', id);
+    showToast('Code revoked.', 'success');
+    loadCodes();
+    loadTopBarStats();
+  };
+
+  // ── Analytics ──────────────────────────────────────────────────
+  async function loadAnalytics() {
+    const { count: totalAttempts } = await supabase.from('attempts').select('id', { count: 'exact', head: true });
+    const { count: totalUsers }    = await supabase.from('users').select('id', { count: 'exact', head: true });
+    const { count: totalQ }        = await supabase.from('questions').select('id', { count: 'exact', head: true });
+
+    document.getElementById('analytics-stats').innerHTML = `
+      <div class="stat-card animate-in"><span class="stat-card-icon">📝</span><div class="stat-card-val">${totalAttempts||0}</div><div class="stat-card-label">Total Attempts</div></div>
+      <div class="stat-card animate-in stagger-1"><span class="stat-card-icon">👥</span><div class="stat-card-val">${totalUsers||0}</div><div class="stat-card-label">Registered Users</div></div>
+      <div class="stat-card animate-in stagger-2"><span class="stat-card-icon">❓</span><div class="stat-card-val">${totalQ||0}</div><div class="stat-card-label">Total Questions</div></div>
+    `;
+
+    // Top failed
+    loadTopFailed('analytics-top-failed', 5);
+
+    // Module scores
+    const scoreContainer = document.getElementById('analytics-module-scores');
+    if (allModules.length === 0) {
+      scoreContainer.innerHTML = `<div class="text-muted text-sm">No data yet.</div>`;
+    } else {
+      const rows = await Promise.all(allModules.map(async m => {
+        const { data } = await supabase.from('attempts').select('score_20').eq('module_id', m.id);
+        if (!data || data.length === 0) return null;
+        const avg = data.reduce((s, a) => s + (a.score_20 || 0), 0) / data.length;
+        return { name: m.name, avg, count: data.length };
+      }));
+      const valid = rows.filter(Boolean);
+      scoreContainer.innerHTML = valid.length === 0
+        ? `<div class="text-muted text-sm">No attempts yet.</div>`
+        : valid.map(r => `
+            <div class="module-perf-item">
+              <div class="module-perf-top">
+                <span class="module-perf-name">${r.name}</span>
+                <span class="module-perf-val">${r.avg.toFixed(1)}/20</span>
+              </div>
+              <div class="module-perf-bar">
+                <div class="module-perf-fill" style="width:${(r.avg/20)*100}%;"></div>
+              </div>
+            </div>
+          `).join('');
+    }
+
+    // Needs attention — failed 5+ times
+    const { data: attention } = await supabase
+      .from('question_progress')
+      .select('times_wrong, questions(text, chapters(name))')
+      .gte('times_wrong', 5)
+      .order('times_wrong', { ascending: false })
+      .limit(10);
+
+    const attentionContainer = document.getElementById('analytics-attention');
+    if (!attention || attention.length === 0) {
+      attentionContainer.innerHTML = `<div class="admin-empty"><span class="admin-empty-icon">✅</span>No questions need urgent attention.</div>`;
+    } else {
+      attentionContainer.innerHTML = attention.map((r, i) => `
+        <div class="failed-q-item">
+          <div class="failed-rank">#${i+1}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="failed-q-text">${r.questions?.text || 'Unknown'}</div>
+            <div class="failed-q-meta">${r.questions?.chapters?.name || '—'}</div>
+          </div>
+          <div class="failed-count">${r.times_wrong}✗</div>
+        </div>
+      `).join('');
+    }
+  }
+
+  // ── Modals ─────────────────────────────────────────────────────
+  window.openModal = function(id) {
+    document.getElementById(id).style.display = 'flex';
+  };
+
+  window.closeModal = function(id) {
+    document.getElementById(id).style.display = 'none';
+  };
+
+  window.confirmAction = function(message, fn) {
+    pendingConfirmFn = fn;
+    document.getElementById('confirm-message').textContent = message;
+    document.getElementById('confirm-yes-btn').onclick = () => {
+      fn();
+      closeModal('modal-confirm');
+    };
+    openModal('modal-confirm');
+  };
+
+  window.openGenerateCode = function() {
+    showSection('codes');
+    document.getElementById('code-qty').focus();
+  };
+
+  // Close modals on backdrop click
+  document.querySelectorAll('.admin-modal-backdrop').forEach(backdrop => {
+    backdrop.addEventListener('click', e => {
+      if (e.target === backdrop) backdrop.style.display = 'none';
+    });
+  });
+
+  // ── Profile dropdown ───────────────────────────────────────────
+  window.toggleProfileDropdown = function() {
+    document.getElementById('profile-dropdown').classList.toggle('open');
+  };
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.topbar-profile')) {
+      document.getElementById('profile-dropdown')?.classList.remove('open');
+    }
+  });
+
+  // ── Sign out ───────────────────────────────────────────────────
+  window.handleSignOut = async function() { await signOut(); };
+
+  // ── Toast ──────────────────────────────────────────────────────
+  function showToast(msg, type = 'info') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    const icons = { success: '✅', error: '⚠️', info: 'ℹ️' };
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span>${msg}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3500);
+  }
+
+  // ── Utils ──────────────────────────────────────────────────────
+  function formatDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  // ── Boot ───────────────────────────────────────────────────────
+  init().catch(console.error);
+</script>
+
+</body>
+</html>

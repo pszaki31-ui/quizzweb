@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedMCQ — Profile</title>
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+
+    .profile-grid { display: grid; grid-template-columns: 300px 1fr; gap: 20px; align-items: start; }
+
+    .profile-card {
+      background: var(--surface);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: 28px 24px;
+      text-align: center;
+      position: sticky;
+      top: 24px;
+    }
+
+    .profile-avatar-big {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--pink));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; font-weight: 600; color: white;
+      margin: 0 auto 16px;
+      box-shadow: 0 8px 28px var(--cyan-glow);
+      position: relative;
+    }
+
+    .profile-avatar-big::after {
+      content: ''; position: absolute; inset: -3px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--pink));
+      z-index: -1; opacity: 0.3; filter: blur(8px);
+    }
+
+    .profile-name { font-size: 20px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.4px; margin-bottom: 4px; }
+    .profile-email { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+    .profile-divider { height: 1px; background: var(--border-soft); margin: 16px 0; }
+
+    .profile-meta-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; padding: 6px 0; }
+    .profile-meta-label { color: var(--text-muted); }
+    .profile-meta-val { font-weight: 500; color: var(--text-primary); }
+
+    .admin-pill {
+      display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px;
+      background: linear-gradient(135deg, var(--cyan-wash), var(--pink-wash));
+      border: 1px solid var(--border-cyan); border-radius: 999px;
+      font-size: 11px; font-weight: 600; color: var(--cyan-dark);
+    }
+
+    .final-grade-wrap {
+      margin-top: 20px; padding: 20px;
+      background: linear-gradient(135deg, rgba(0,200,212,0.08), rgba(240,98,164,0.06));
+      border: 1px solid var(--border-cyan); border-radius: var(--radius-md); text-align: center;
+    }
+
+    .final-grade-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+    .final-grade-val {
+      font-size: 48px; font-weight: 300; letter-spacing: -3px; line-height: 1;
+      background: linear-gradient(135deg, var(--cyan-dark), var(--pink-dark));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .final-grade-denom { font-size: 20px; color: var(--text-muted); font-weight: 300; letter-spacing: 0; }
+    .final-grade-sub { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+    /* The Admin Button Style */
+    .admin-panel-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; margin-top: 16px; padding: 11px 16px;
+      background: var(--cyan); border: none; border-radius: var(--radius-sm);
+      font-size: 13px; font-weight: 600; color: white; text-decoration: none;
+      cursor: pointer; transition: all var(--t-fast); box-sizing: border-box;
+    }
+    .admin-panel-btn:hover { filter: brightness(1.1); box-shadow: 0 0 0 3px var(--cyan-glow); transform: translateY(-1px); }
+
+    .section-heading { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .section-heading::after { content: ''; flex: 1; height: 1px; background: var(--border-soft); }
+
+    .grades-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 28px; }
+    .grade-card {
+      background: var(--surface); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+      border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px 18px;
+      box-shadow: var(--shadow-sm); transition: transform var(--t-fast), box-shadow var(--t-fast);
+    }
+    .grade-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+    .grade-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .grade-module-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .grade-coeff { font-size: 11px; color: var(--text-muted); background: var(--bg-alt); padding: 2px 7px; border-radius: 999px; }
+    .grade-score {
+      font-size: 28px; font-weight: 700; letter-spacing: -1.5px; line-height: 1;
+      background: linear-gradient(135deg, var(--cyan-dark), var(--pink));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .grade-score-denom { font-size: 14px; color: var(--text-muted); font-weight: 400; }
+    .grade-attempts-label { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+    .grade-bar { margin-top: 10px; height: 4px; background: var(--bg-alt); border-radius: 999px; overflow: hidden; }
+    .grade-bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--cyan), var(--pink)); transition: width 0.7s var(--ease-out); }
+
+    .attempts-section { background: var(--surface); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
+    .attempts-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border-soft); gap: 12px; flex-wrap: wrap; }
+    .attempts-count { font-size: 13px; color: var(--text-muted); }
+    .attempts-count strong { color: var(--text-primary); font-weight: 600; }
+
+    .filter-row { display: flex; gap: 6px; }
+    .filter-pill { padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 500; border: 1px solid var(--border-soft); background: rgba(255,255,255,0.5); color: var(--text-secondary); cursor: pointer; transition: all var(--t-fast); font-family: inherit; }
+    .filter-pill:hover { border-color: var(--cyan); color: var(--cyan-dark); background: var(--cyan-wash); }
+    .filter-pill.active { background: var(--cyan-wash); border-color: var(--cyan); color: var(--cyan-dark); }
+
+    .attempts-table-wrap { overflow-x: auto; }
+    .attempts-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .attempts-table thead th { padding: 12px 18px; text-align: left; font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; background: rgba(0,0,0,0.02); border-bottom: 1px solid var(--border-soft); white-space: nowrap; }
+    .attempts-table tbody td { padding: 13px 18px; border-bottom: 1px solid var(--border-soft); color: var(--text-primary); white-space: nowrap; }
+    .attempts-table tbody tr:last-child td { border-bottom: none; }
+    .attempts-table tbody tr { transition: background var(--t-fast); }
+    .attempts-table tbody tr:hover { background: var(--cyan-wash); }
+
+    .score-cell { font-weight: 700; font-family: 'DM Mono', monospace; font-size: 15px; }
+    .score-cell.high { color: #0a9c6a; }
+    .score-cell.mid  { color: #b87800; }
+    .score-cell.low  { color: #c02040; }
+
+    .mode-pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+    .mode-pill.easy { background: rgba(16,201,138,0.1); color: #0a9c6a; border: 1px solid rgba(16,201,138,0.25); }
+    .mode-pill.hard { background: var(--pink-wash); color: var(--pink-dark); border: 1px solid rgba(240,98,164,0.2); }
+    .mode-pill.standard { background: rgba(0,200,212,0.1); color: var(--cyan-dark); border: 1px solid rgba(0,200,212,0.25); }
+
+    .time-cell { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text-muted); }
+    .empty-attempts { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .empty-attempts-icon { font-size: 40px; margin-bottom: 12px; display: block; opacity: 0.4; }
+
+    .pagination { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px; border-top: 1px solid var(--border-soft); }
+    .page-btn { width: 32px; height: 32px; border-radius: var(--radius-sm); border: 1px solid var(--border-soft); background: rgba(255,255,255,0.5); color: var(--text-secondary); font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--t-fast); font-family: inherit; }
+    .page-btn:hover { border-color: var(--cyan); color: var(--cyan-dark); background: var(--cyan-wash); }
+    .page-btn.active { background: var(--cyan); border-color: var(--cyan); color: white; }
+    .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    @media (max-width: 900px) { .profile-grid { grid-template-columns: 1fr; } .profile-card { position: static; } }
+    @media (max-width: 600px) { .grades-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<div class="app-shell" id="app-shell">
+
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-avatar" id="sidebar-avatar">?</div>
+      <span class="sidebar-name" id="sidebar-name">Loading…</span>
+    </div>
+    <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">‹</button>
+    <div class="sidebar-nav">
+      <a class="nav-item" href="index.html" data-label="Dashboard"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a>
+      <a class="nav-item" href="modules.html" data-label="Modules"><span class="nav-icon">📚</span><span class="nav-label">Modules</span></a>
+      <a class="nav-item" href="progress.html" data-label="Progress"><span class="nav-icon">📈</span><span class="nav-label">Progress</span></a>
+      <a class="nav-item" href="scoreboard.html" data-label="Scoreboard"><span class="nav-icon">🏆</span><span class="nav-label">Scoreboard</span></a>
+      <a class="nav-item active" href="profile.html" data-label="Profile"><span class="nav-icon">👤</span><span class="nav-label">Profile</span></a>
+    </div>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="handleSignOut()"><span class="nav-icon">🚪</span><span>Sign Out</span></button>
+    </div>
+  </nav>
+
+  <main class="main-content">
+
+    <div class="page-header animate-in">
+      <div class="page-title">Profile</div>
+      <div class="page-subtitle">Your account info, grades, and full attempt history.</div>
+    </div>
+
+    <div class="profile-grid">
+
+      <div class="animate-in stagger-1">
+        <div class="profile-card">
+          <div class="profile-avatar-big" id="profile-avatar-big">?</div>
+          <div class="profile-name" id="profile-name">Loading…</div>
+          <div class="profile-email" id="profile-email">—</div>
+
+          <div class="profile-divider"></div>
+
+          <div class="profile-meta-row">
+            <span class="profile-meta-label">Member since</span>
+            <span class="profile-meta-val" id="member-since">—</span>
+          </div>
+          <div class="profile-meta-row">
+            <span class="profile-meta-label">Role</span>
+            <span class="profile-meta-val" id="profile-role">—</span>
+          </div>
+          <div class="profile-meta-row">
+            <span class="profile-meta-label">Total quizzes</span>
+            <span class="profile-meta-val" id="total-quizzes">—</span>
+          </div>
+          <div class="profile-meta-row">
+            <span class="profile-meta-label">Best score</span>
+            <span class="profile-meta-val" id="best-score">—</span>
+          </div>
+
+          <div class="final-grade-wrap">
+            <div class="final-grade-label">Final Grade</div>
+            <div>
+              <span class="final-grade-val" id="final-grade-val">—</span>
+              <span class="final-grade-denom">/20</span>
+            </div>
+            <div class="final-grade-sub" id="final-grade-sub">Complete quizzes to generate your grade</div>
+          </div>
+
+          </div>
+      </div>
+
+      <div>
+        <div class="animate-in stagger-2">
+          <div class="section-heading">Grades by Module</div>
+          <div class="grades-grid" id="grades-grid">
+            <div class="skeleton" style="height:110px;border-radius:14px;"></div>
+            <div class="skeleton stagger-1" style="height:110px;border-radius:14px;"></div>
+            <div class="skeleton stagger-2" style="height:110px;border-radius:14px;"></div>
+          </div>
+        </div>
+
+        <div class="animate-in stagger-3">
+          <div class="section-heading">Attempt History</div>
+          <div class="attempts-section">
+            <div class="attempts-toolbar">
+              <div class="attempts-count">
+                <strong id="attempt-count">0</strong> attempts
+              </div>
+              <div class="filter-row">
+                <button class="filter-pill active" onclick="setFilter('all', this)">All</button>
+                <button class="filter-pill" onclick="setFilter('easy', this)">🌱 Easy</button>
+                <button class="filter-pill" onclick="setFilter('hard', this)">🔥 Hard</button>
+              </div>
+            </div>
+
+            <div class="attempts-table-wrap">
+              <table class="attempts-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Module</th>
+                    <th>Mode</th>
+                    <th>Score</th>
+                    <th>%</th>
+                    <th>Time used</th>
+                  </tr>
+                </thead>
+                <tbody id="attempts-tbody">
+                  <tr>
+                    <td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted);">
+                      <div class="skeleton" style="height:14px;width:60%;margin:0 auto 8px;border-radius:4px;"></div>
+                      <div class="skeleton stagger-1" style="height:14px;width:80%;margin:0 auto;border-radius:4px;"></div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="pagination" id="pagination"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script type="module">
+  // We import directly from your beautifully written supabase.js
+  import {
+    requireAuth,
+    getCurrentProfile,
+    getUserAttempts,
+    getModules,
+    signOut
+  } from './js/supabase.js';
+
+  let currentUser      = null;
+  let currentProfile   = null;
+  let allAttempts      = [];
+  let filteredAttempts = [];
+  let allModules       = [];
+  let currentPage      = 1;
+  const PAGE_SIZE      = 15;
+
+  async function init() {
+    setupSidebarToggle();
+
+    currentUser = await requireAuth();
+    if (!currentUser) return;
+
+    // Use YOUR custom Supabase functions to fetch everything beautifully in parallel
+    const [profile, attempts, modules] = await Promise.all([
+      getCurrentProfile(),
+      getUserAttempts(currentUser.id),
+      getModules()
+    ]);
+
+    currentProfile   = profile;
+    allAttempts      = attempts || [];
+    allModules       = modules || [];
+    filteredAttempts = [...allAttempts];
+
+    renderSidebar();
+    renderProfileCard();
+    renderModuleGrades();
+    renderFinalGrade();
+    document.getElementById('attempt-count').textContent = allAttempts.length;
+    renderTable();
+    renderPagination();
+  }
+
+  function renderSidebar() {
+    const name     = currentProfile?.name || currentProfile?.full_name || currentUser.email;
+    const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    document.getElementById('sidebar-avatar').textContent = initials;
+    document.getElementById('sidebar-name').textContent   = name;
+  }
+
+  function renderProfileCard() {
+    const name     = currentProfile?.name || currentProfile?.full_name || currentUser.email;
+    const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+
+    document.getElementById('profile-avatar-big').textContent = initials;
+    document.getElementById('profile-name').textContent       = name;
+    document.getElementById('profile-email').textContent      = currentUser.email;
+    document.getElementById('member-since').textContent       = formatDate(currentProfile?.created_at || currentUser.created_at);
+    document.getElementById('total-quizzes').textContent      = allAttempts.length;
+    document.getElementById('best-score').textContent         = allAttempts.length > 0
+      ? Math.max(...allAttempts.map(a => a.score_20 || (a.score_pct / 100 * 20) || 0)).toFixed(1) + ' / 20'
+      : '—';
+
+    const roleEl = document.getElementById('profile-role');
+    
+    // ── The Bulletproof Dynamic Injection ──
+    if (currentProfile?.is_admin) {
+      roleEl.innerHTML = '<span class="admin-pill">⚙️ Admin</span>';
+
+      const existingBtn = document.getElementById('admin-entry-btn');
+      if (existingBtn) existingBtn.remove(); // Safety guard
+
+      const adminBtn = document.createElement('a');
+      adminBtn.id        = 'admin-entry-btn';
+      adminBtn.href      = 'admin.html'; // Corrected route
+      adminBtn.className = 'admin-panel-btn';
+      adminBtn.innerHTML = '⚙️ Admin Control Panel';
+
+      document.querySelector('.profile-card').appendChild(adminBtn);
+    } else {
+      roleEl.textContent = 'Student';
+    }
+  }
+
+  function renderFinalGrade() {
+    if (allAttempts.length === 0 || allModules.length === 0) return;
+
+    const moduleMap = {};
+    allAttempts.forEach(a => {
+      if (!a.module_id) return;
+      if (!moduleMap[a.module_id]) moduleMap[a.module_id] = [];
+      moduleMap[a.module_id].push(a.score_20 || (a.score_pct / 100 * 20) || 0);
+    });
+
+    let weightedSum = 0, totalCoeff = 0;
+    allModules.forEach(mod => {
+      const scores = moduleMap[mod.id];
+      if (!scores || scores.length === 0) return;
+      const avg = scores.reduce((s, v) => s + v, 0) / scores.length;
+      weightedSum += avg * (mod.coefficient || 1);
+      totalCoeff  += (mod.coefficient || 1);
+    });
+
+    if (totalCoeff === 0) return;
+
+    document.getElementById('final-grade-val').textContent = (weightedSum / totalCoeff).toFixed(2);
+    document.getElementById('final-grade-sub').textContent =
+      `Weighted across ${Object.keys(moduleMap).length} module${Object.keys(moduleMap).length !== 1 ? 's' : ''}`;
+  }
+
+  function renderModuleGrades() {
+    const grid = document.getElementById('grades-grid');
+
+    const moduleMap = {};
+    allAttempts.forEach(a => {
+      if (!a.module_id) return;
+      if (!moduleMap[a.module_id]) moduleMap[a.module_id] = { scores: [], name: a.modules?.name || 'Unknown' };
+      moduleMap[a.module_id].scores.push(a.score_20 || (a.score_pct / 100 * 20) || 0);
+    });
+
+    if (Object.keys(moduleMap).length === 0) {
+      grid.innerHTML = `<div class="text-muted text-sm" style="padding:8px 0;grid-column:1/-1;">No attempts yet — complete some quizzes to see grades.</div>`;
+      return;
+    }
+
+    grid.innerHTML = '';
+    allModules.forEach(mod => {
+      const data = moduleMap[mod.id];
+      if (!data) return;
+      const avg   = data.scores.reduce((s, v) => s + v, 0) / data.scores.length;
+      const pct   = (avg / 20) * 100;
+      const count = data.scores.length;
+      const card  = document.createElement('div');
+      card.className = 'grade-card';
+      card.innerHTML = `
+        <div class="grade-card-top">
+          <div class="grade-module-name">${mod.name}</div>
+          <div class="grade-coeff">×${mod.coefficient || 1}</div>
+        </div>
+        <div>
+          <span class="grade-score">${avg.toFixed(1)}</span>
+          <span class="grade-score-denom">/20</span>
+        </div>
+        <div class="grade-attempts-label">${count} attempt${count !== 1 ? 's' : ''}</div>
+        <div class="grade-bar"><div class="grade-bar-fill" style="width:${pct}%;"></div></div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  window.setFilter = function(filter, btn) {
+    currentPage = 1;
+    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    filteredAttempts = filter === 'all' ? allAttempts : allAttempts.filter(a => (a.mode || '').toLowerCase() === filter);
+    document.getElementById('attempt-count').textContent = filteredAttempts.length;
+    renderTable();
+    renderPagination();
+  };
+
+  function renderTable() {
+    const tbody = document.getElementById('attempts-tbody');
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const page  = filteredAttempts.slice(start, start + PAGE_SIZE);
+
+    if (filteredAttempts.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-attempts"><span class="empty-attempts-icon">📭</span><div>No attempts found</div></div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = page.map(a => {
+      const pctVal   = a.score_pct || a.score || 0;
+      const score20  = (a.score_20 || (pctVal / 100 * 20)).toFixed(1);
+      const scorePct = Math.round(pctVal);
+      const cls      = scorePct >= 75 ? 'high' : scorePct >= 50 ? 'mid' : 'low';
+      
+      const modeStr = (a.mode || 'Standard').toLowerCase();
+      let modeIcon = '📝';
+      if(modeStr === 'easy') modeIcon = '🌱';
+      if(modeStr === 'hard') modeIcon = '🔥';
+
+      return `
+        <tr>
+          <td>${formatDate(a.completed_at || a.created_at)}</td>
+          <td>${a.modules?.name || '—'}</td>
+          <td><span class="mode-pill ${modeStr}">${modeIcon} ${modeStr}</span></td>
+          <td><span class="score-cell ${cls}">${score20}/20</span></td>
+          <td><span class="score-cell ${cls}">${scorePct}%</span></td>
+          <td><span class="time-cell">${formatTime(a.time_used || a.time_taken || 0)}</span></td>
+        </tr>`;
+    }).join('');
+  }
+
+  function renderPagination() {
+    const total = Math.ceil(filteredAttempts.length / PAGE_SIZE);
+    const pag   = document.getElementById('pagination');
+    if (total <= 1) { pag.innerHTML = ''; return; }
+
+    let html = `<button class="page-btn" onclick="goPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹</button>`;
+    for (let i = 1; i <= total; i++) {
+      if (total > 7 && i > 2 && i < total - 1 && Math.abs(i - currentPage) > 1) {
+        if (i === 3 || i === total - 2) html += `<span style="color:var(--text-muted);padding:0 4px;">…</span>`;
+        continue;
+      }
+      html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+    }
+    html += `<button class="page-btn" onclick="goPage(${currentPage + 1})" ${currentPage === total ? 'disabled' : ''}>›</button>`;
+    pag.innerHTML = html;
+  }
+
+  window.goPage = function(page) {
+    const total = Math.ceil(filteredAttempts.length / PAGE_SIZE);
+    if (page < 1 || page > total) return;
+    currentPage = page;
+    renderTable();
+    renderPagination();
+  };
+
+  function formatDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  function formatTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}m ${String(s).padStart(2, '0')}s`;
+  }
+
+  function setupSidebarToggle() {
+    const saved = localStorage.getItem('sidebarCollapsed');
+    if (saved === 'true') {
+      document.getElementById('app-shell').classList.add('sidebar-collapsed');
+      document.getElementById('sidebar-toggle').textContent = '›';
+    }
+  }
+
+  window.toggleSidebar = function() {
+    const shell     = document.getElementById('app-shell');
+    const btn       = document.getElementById('sidebar-toggle');
+    const collapsed = shell.classList.toggle('sidebar-collapsed');
+    btn.textContent = collapsed ? '›' : '‹';
+    localStorage.setItem('sidebarCollapsed', collapsed);
+  };
+
+  window.handleSignOut = async function() { await signOut(); };
+
+  init().catch(console.error);
+</script>
+
+</body>
+</html>

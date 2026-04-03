@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedMCQ — Sign In</title>
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&family=DM+Mono:wght@400;500&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      background: #eef0f4;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ── ANIMATED BACKGROUND ── */
+    .bg-scene {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      background: linear-gradient(145deg, #eaf6f7 0%, #f0eef8 40%, #fceef5 100%);
+    }
+
+    .bg-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(70px);
+      opacity: 0;
+      animation: orbFloat 0.8s ease forwards;
+    }
+
+    .bg-orb-1 {
+      width: 520px; height: 520px;
+      background: radial-gradient(circle, rgba(0,200,212,0.28) 0%, transparent 70%);
+      top: -120px; left: -80px;
+      animation-delay: 0ms;
+    }
+    .bg-orb-2 {
+      width: 440px; height: 440px;
+      background: radial-gradient(circle, rgba(240,98,164,0.22) 0%, transparent 70%);
+      bottom: -100px; right: -60px;
+      animation-delay: 100ms;
+    }
+    .bg-orb-3 {
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(0,200,212,0.12) 0%, transparent 70%);
+      top: 40%; left: 55%;
+      animation-delay: 200ms;
+    }
+
+    @keyframes orbFloat {
+      to { opacity: 1; }
+    }
+
+    /* Grid texture overlay */
+    .bg-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,200,212,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,200,212,0.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+    }
+
+    /* ── SPLIT LAYOUT ── */
+    .page-split {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      width: 100%;
+      min-height: 100vh;
+    }
+
+    /* LEFT PANEL — decorative */
+    .left-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 60px 64px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .left-panel::after {
+      content: '';
+      position: absolute;
+      right: 0; top: 10%; bottom: 10%;
+      width: 1px;
+      background: linear-gradient(to bottom, transparent, rgba(0,200,212,0.3) 30%, rgba(240,98,164,0.3) 70%, transparent);
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,200,212,0.1);
+      border: 1px solid rgba(0,200,212,0.3);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #0099a8;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+      width: fit-content;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .hero-tag span {
+      width: 6px; height: 6px;
+      background: #00c8d4;
+      border-radius: 50%;
+      animation: blink 2s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .hero-headline {
+      font-size: clamp(36px, 4vw, 52px);
+      font-weight: 700;
+      letter-spacing: -2px;
+      line-height: 1.08;
+      color: #1a1d23;
+      margin-bottom: 20px;
+      animation: fadeUp 0.6s 80ms ease both;
+    }
+
+    .hero-headline .grad {
+      background: linear-gradient(135deg, #00c8d4 0%, #f062a4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: 16px;
+      color: #6a7280;
+      line-height: 1.7;
+      max-width: 400px;
+      margin-bottom: 48px;
+      font-weight: 400;
+      animation: fadeUp 0.6s 160ms ease both;
+    }
+
+    /* Feature pills */
+    .features {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      animation: fadeUp 0.6s 240ms ease both;
+    }
+
+    .feat-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .feat-icon {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+      flex-shrink: 0;
+    }
+
+    .feat-icon.cyan { background: rgba(0,200,212,0.12); border: 1px solid rgba(0,200,212,0.25); }
+    .feat-icon.pink { background: rgba(240,98,164,0.10); border: 1px solid rgba(240,98,164,0.2); }
+    .feat-icon.purple { background: rgba(139,92,246,0.10); border: 1px solid rgba(139,92,246,0.2); }
+
+    .feat-text strong {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a1d23;
+    }
+
+    .feat-text span {
+      font-size: 13px;
+      color: #8a92a0;
+    }
+
+    /* Floating card decorations */
+    .deco-card {
+      position: absolute;
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.9);
+      border-radius: 16px;
+      padding: 14px 18px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+      animation: floatCard 6s ease-in-out infinite;
+    }
+
+    .deco-card-1 {
+      bottom: 140px;
+      right: 60px;
+      animation-delay: 0s;
+    }
+
+    .deco-card-2 {
+      top: 140px;
+      right: 100px;
+      animation-delay: 3s;
+    }
+
+    @keyframes floatCard {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .deco-score {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #00c8d4, #f062a4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .deco-label {
+      font-size: 11px;
+      color: #8a92a0;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 2px;
+    }
+
+    .deco-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .deco-badge-icon {
+      font-size: 20px;
+    }
+
+    .deco-badge-text strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #1a1d23;
+    }
+
+    .deco-badge-text span {
+      font-size: 11px;
+      color: #8a92a0;
+    }
+
+    /* RIGHT PANEL — auth */
+    .right-panel {
+      width: 480px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 48px;
+      position: relative;
+    }
+
+    .auth-container {
+      width: 100%;
+      max-width: 380px;
+    }
+
+    /* Logo */
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 36px;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .logo-mark {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, #00c8d4, #f062a4);
+      border-radius: 13px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 6px 20px rgba(0,200,212,0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logo-mark::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 60%);
+    }
+
+    .logo-text {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.8px;
+      background: linear-gradient(135deg, #0099a8, #c0407a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Card */
+    .auth-card {
+      background: rgba(255,255,255,0.72);
+      backdrop-filter: blur(24px) saturate(160%);
+      -webkit-backdrop-filter: blur(24px) saturate(160%);
+      border: 1px solid rgba(255,255,255,0.85);
+      border-radius: 24px;
+      box-shadow:
+        0 2px 0 rgba(255,255,255,0.9) inset,
+        0 20px 60px rgba(0,0,0,0.1),
+        0 4px 16px rgba(0,0,0,0.05);
+      overflow: hidden;
+      animation: fadeUp 0.5s 80ms ease both;
+    }
+
+    /* Tab row */
+    .tab-row {
+      display: flex;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 18px;
+      font-size: 14px;
+      font-weight: 500;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #8a92a0;
+      position: relative;
+      transition: all 140ms ease;
+      font-family: 'DM Sans', sans-serif;
+      letter-spacing: 0.01em;
+    }
+
+    .tab-btn::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 20%;
+      right: 20%;
+      height: 2px;
+      background: linear-gradient(90deg, #00c8d4, #f062a4);
+      border-radius: 2px 2px 0 0;
+      transform: scaleX(0);
+      transition: transform 200ms ease;
+    }
+
+    .tab-btn.active {
+      color: #1a1d23;
+      background: rgba(0,200,212,0.03);
+    }
+
+    .tab-btn.active::after {
+      transform: scaleX(1);
+    }
+
+    /* Form area */
+    .form-area {
+      padding: 28px 28px 32px;
+    }
+
+    .form-header {
+      margin-bottom: 24px;
+    }
+
+    .form-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1a1d23;
+      letter-spacing: -0.5px;
+    }
+
+    .form-subtitle {
+      font-size: 13px;
+      color: #8a92a0;
+      margin-top: 4px;
+    }
+
+    /* Form fields */
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .auth-form.hidden { display: none; }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #4a5060;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .field-wrap {
+      position: relative;
+    }
+
+    .field-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      pointer-events: none;
+      opacity: 0.5;
+    }
+
+    .field-input {
+      width: 100%;
+      padding: 12px 16px 12px 42px;
+      background: rgba(255,255,255,0.6);
+      border: 1.5px solid rgba(0,0,0,0.08);
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      color: #1a1d23;
+      outline: none;
+      transition: all 140ms ease;
+    }
+
+    .field-input::placeholder { color: #b0b8c4; }
+
+    .field-input:focus {
+      border-color: #00c8d4;
+      background: rgba(255,255,255,0.9);
+      box-shadow: 0 0 0 3px rgba(0,200,212,0.15);
+    }
+
+    .field-input.invite-input {
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    .field-input.invite-input::placeholder {
+      letter-spacing: 0;
+      font-family: 'DM Sans', sans-serif;
+      text-transform: none;
+    }
+
+    .pwd-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 15px;
+      opacity: 0.4;
+      transition: opacity 140ms;
+      padding: 4px;
+    }
+
+    .pwd-toggle:hover { opacity: 0.8; }
+
+    /* Invite hint */
+    .invite-hint {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #8a92a0;
+    }
+
+    /* Message */
+    .form-message {
+      padding: 11px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-message.show { display: flex; }
+    .form-message.error   { background: rgba(240,64,96,0.08); color: #c02040; border: 1px solid rgba(240,64,96,0.18); }
+    .form-message.success { background: rgba(16,201,138,0.08); color: #0a9c6a; border: 1px solid rgba(16,201,138,0.22); }
+
+    /* Submit */
+    .submit-btn {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, #00c8d4 0%, #0099a8 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      margin-top: 4px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,200,212,0.35), 0 1px 0 rgba(255,255,255,0.15) inset;
+      transition: all 160ms ease;
+      letter-spacing: 0.01em;
+    }
+
+    .submit-btn::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      transition: left 400ms ease;
+    }
+
+    .submit-btn:hover::before { left: 100%; }
+
+    .submit-btn:hover {
+      box-shadow: 0 6px 24px rgba(0,200,212,0.45), 0 1px 0 rgba(255,255,255,0.15) inset;
+      transform: translateY(-1px);
+    }
+
+    .submit-btn:active { transform: scale(0.98); }
+
+    .submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-loading {
+      color: transparent !important;
+    }
+
+    .btn-loading::after {
+      content: '';
+      position: absolute;
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.35);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      left: 50%; top: 50%;
+      margin: -9px 0 0 -9px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Footer */
+    .card-footer {
+      padding: 14px 28px 18px;
+      border-top: 1px solid rgba(0,0,0,0.05);
+      text-align: center;
+      font-size: 12px;
+      color: #aab0bc;
+      background: rgba(0,0,0,0.015);
+    }
+
+    /* Animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .left-panel { display: none; }
+      .right-panel { width: 100%; padding: 32px 24px; }
+      .bg-orb-3 { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background -->
+  <div class="bg-scene">
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+    <div class="bg-grid"></div>
+  </div>
+
+  <div class="page-split">
+
+    <!-- ── LEFT PANEL ── -->
+    <div class="left-panel">
+
+      <div class="hero-tag">
+        <span></span>
+        Study Platform · Beta
+      </div>
+
+      <h1 class="hero-headline">
+        Ace every exam.<br>
+        <span class="grad">Know every question.</span>
+      </h1>
+
+      <p class="hero-sub">
+        A personal MCQ engine built for med school.
+        Spaced repetition, score tracking, and roasts
+        when you bomb a quiz.
+      </p>
+
+      <div class="features">
+        <div class="feat-item">
+          <div class="feat-icon cyan">🧠</div>
+          <div class="feat-text">
+            <strong>Spaced Repetition</strong>
+            <span>SM-2 algorithm — study what matters, when it matters</span>
+          </div>
+        </div>
+        <div class="feat-item">
+          <div class="feat-icon pink">📊</div>
+          <div class="feat-text">
+            <strong>Detailed Analytics</strong>
+            <span>Per-module mastery, heatmaps, nemesis questions</span>
+          </div>
+        </div>
+        <div class="feat-item">
+          <div class="feat-icon purple">⚡</div>
+          <div class="feat-text">
+            <strong>Two Quiz Modes</strong>
+            <span>Easy warm-up or Hard mode when you're feeling brave</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Floating decoration cards -->
+      <div class="deco-card deco-card-1">
+        <div class="deco-score">18.4<span style="font-size:13px;color:#8a92a0;font-weight:400;">/20</span></div>
+        <div class="deco-label">Last attempt · Anatomy</div>
+      </div>
+
+      <div class="deco-card deco-card-2">
+        <div class="deco-badge">
+          <div class="deco-badge-icon">🏆</div>
+          <div class="deco-badge-text">
+            <strong>Big Brain</strong>
+            <span>Score 90%+ on Hard mode</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── RIGHT PANEL ── -->
+    <div class="right-panel">
+      <div class="auth-container">
+
+        <!-- Logo -->
+        <div class="logo-row">
+          <div class="logo-mark">🧠</div>
+          <div class="logo-text">MedMCQ</div>
+        </div>
+
+        <!-- Auth card -->
+        <div class="auth-card">
+
+          <!-- Tabs -->
+          <div class="tab-row">
+            <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">Sign In</button>
+            <button class="tab-btn" id="tab-register" onclick="switchTab('register')">Register</button>
+          </div>
+
+          <div class="form-area">
+
+            <!-- Form message -->
+            <div class="form-message" id="form-message"></div>
+
+            <!-- LOGIN FORM -->
+            <form class="auth-form" id="form-login" onsubmit="handleLogin(event)">
+
+              <div class="form-header">
+                <div class="form-title">Welcome back 👋</div>
+                <div class="form-subtitle">Sign in to continue studying</div>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Email</label>
+                <div class="field-wrap">
+                  <span class="field-icon">✉️</span>
+                  <input class="field-input" type="email" id="login-email"
+                    placeholder="your@email.com" autocomplete="email" required>
+                </div>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Password</label>
+                <div class="field-wrap">
+                  <span class="field-icon">🔑</span>
+                  <input class="field-input" type="password" id="login-password"
+                    placeholder="Your password" autocomplete="current-password"
+                    style="padding-right: 44px;" required>
+                  <button type="button" class="pwd-toggle" onclick="togglePwd('login-password', this)">👁</button>
+                </div>
+              </div>
+
+              <button type="submit" class="submit-btn" id="btn-login">
+                Sign In →
+              </button>
+
+            </form>
+
+            <!-- REGISTER FORM -->
+            <form class="auth-form hidden" id="form-register" onsubmit="handleRegister(event)">
+
+              <div class="form-header">
+                <div class="form-title">Create account</div>
+                <div class="form-subtitle">You'll need a valid invite code to join</div>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Full Name</label>
+                <div class="field-wrap">
+                  <span class="field-icon">👤</span>
+                  <input class="field-input" type="text" id="reg-name"
+                    placeholder="Dr. Future" autocomplete="name" required>
+                </div>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Email</label>
+                <div class="field-wrap">
+                  <span class="field-icon">✉️</span>
+                  <input class="field-input" type="email" id="reg-email"
+                    placeholder="your@email.com" autocomplete="email" required>
+                </div>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Password</label>
+                <div class="field-wrap">
+                  <span class="field-icon">🔑</span>
+                  <input class="field-input" type="password" id="reg-password"
+                    placeholder="Min 8 characters" autocomplete="new-password"
+                    minlength="8" style="padding-right: 44px;" required>
+                  <button type="button" class="pwd-toggle" onclick="togglePwd('reg-password', this)">👁</button>
+                </div>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Invite Code</label>
+                <div class="field-wrap">
+                  <span class="field-icon">🎟️</span>
+                  <input class="field-input invite-input" type="text" id="reg-invite"
+                    placeholder="Enter your invite code" autocomplete="off" required>
+                </div>
+                <div class="invite-hint">
+                  <span>🔒</span>
+                  <span>Single-use code required to create an account</span>
+                </div>
+              </div>
+
+              <button type="submit" class="submit-btn" id="btn-register">
+                Create Account →
+              </button>
+
+            </form>
+
+          </div>
+
+          <div class="card-footer">
+            By signing in you agree to study harder than you thought possible 🫡
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { supabase, validateInviteCode, markInviteCodeUsed } from './js/supabase.js';
+
+    // ── Redirect if already logged in ──
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) window.location.href = './index.html';
+    });
+
+    // ── Tab switching ──
+    window.switchTab = function(tab) {
+      const isLogin = tab === 'login';
+      document.getElementById('tab-login').classList.toggle('active', isLogin);
+      document.getElementById('tab-register').classList.toggle('active', !isLogin);
+      document.getElementById('form-login').classList.toggle('hidden', !isLogin);
+      document.getElementById('form-register').classList.toggle('hidden', isLogin);
+      clearMessage();
+    };
+
+    // ── Password toggle ──
+    window.togglePwd = function(id, btn) {
+      const input = document.getElementById(id);
+      const isText = input.type === 'text';
+      input.type = isText ? 'password' : 'text';
+      btn.textContent = isText ? '👁' : '🙈';
+    };
+
+    // ── Message helpers ──
+    function showMessage(text, type = 'error') {
+      const el = document.getElementById('form-message');
+      el.textContent = '';
+      const icon = document.createElement('span');
+      icon.textContent = type === 'error' ? '⚠️' : '✅';
+      const msg = document.createTextNode(' ' + text);
+      el.appendChild(icon);
+      el.appendChild(msg);
+      el.className = `form-message ${type} show`;
+    }
+
+    function clearMessage() {
+      const el = document.getElementById('form-message');
+      el.className = 'form-message';
+    }
+
+    function setLoading(btnId, loading) {
+      const btn = document.getElementById(btnId);
+      btn.disabled = loading;
+      btn.classList.toggle('btn-loading', loading);
+    }
+
+    // ── LOGIN ──
+    window.handleLogin = async function(e) {
+      e.preventDefault();
+      clearMessage();
+      setLoading('btn-login', true);
+
+      const email    = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        showMessage(
+          error.message.includes('Invalid login')
+            ? 'Wrong email or password. Try again.'
+            : error.message,
+          'error'
+        );
+        setLoading('btn-login', false);
+        return;
+      }
+
+      showMessage('Welcome back! Redirecting...', 'success');
+      setTimeout(() => { window.location.href = './index.html'; }, 800);
+    };
+
+    // ── REGISTER ──
+    window.handleRegister = async function(e) {
+      e.preventDefault();
+      clearMessage();
+      setLoading('btn-register', true);
+
+      const name       = document.getElementById('reg-name').value.trim();
+      const email      = document.getElementById('reg-email').value.trim();
+      const password   = document.getElementById('reg-password').value;
+      const inviteCode = document.getElementById('reg-invite').value.trim().toUpperCase();
+
+      const { valid, reason } = await validateInviteCode(inviteCode);
+      if (!valid) {
+        showMessage(reason, 'error');
+        setLoading('btn-register', false);
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { name } }
+      });
+
+      if (error) {
+        showMessage(error.message, 'error');
+        setLoading('btn-register', false);
+        return;
+      }
+
+      if (data.user) {
+        await markInviteCodeUsed(inviteCode, data.user.id);
+      }
+
+      showMessage('Account created! Welcome to MedMCQ 🎉', 'success');
+      setTimeout(() => { window.location.href = './index.html'; }, 1200);
+    };
+  </script>
+
+</body>
+</html>
