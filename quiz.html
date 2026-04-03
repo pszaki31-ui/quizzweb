@@ -974,12 +974,13 @@
   let lastScoreData  = null;
   let lastTimeUsed   = 0;
 
-  // Timer
-  let totalSeconds  = 20 * 60;
-  let secondsLeft   = 20 * 60;
+  // Timer — always 20 min flat for both modes
+  const QUIZ_SECONDS = 20 * 60;
+  let totalSeconds  = QUIZ_SECONDS;
+  let secondsLeft   = QUIZ_SECONDS;
   let timerInterval = null;
   let graceActive   = false;
-  let graceLeft     = 2 * 60;
+  let graceLeft     = Math.round(QUIZ_SECONDS * 0.1); // 2 min grace (10% of 20 min)
 
   // ══════════════════════════════════════════════
   // ROASTS
@@ -1052,11 +1053,7 @@
         _opts: shuffle(q.options || [])
       }));
 
-      // Scale time for fewer questions
-      const target = mode === 'hard' ? 38 : 25;
-      if (questions.length < target) {
-        totalSeconds = Math.round((questions.length / target) * 20 * 60);
-      }
+      // Timer is always 20 min flat — no scaling needed
       secondsLeft = totalSeconds;
 
       setLoading('Almost there…');
