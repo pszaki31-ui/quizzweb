@@ -1030,11 +1030,18 @@
   // ── Mission ────────────────────────────────────────────────────
   async function renderMission() {
     const today = new Date().toISOString().split('T')[0];
-    const { count: dueCount } = await supabase
+    const { data: dueRows } = await supabase
       .from('question_progress')
-      .select('id', { count: 'exact', head: true })
+      .select('question_id')
       .eq('user_id', currentUser.id)
       .lte('next_review', today);
+
+    const dueCount = dueRows?.length ?? 0;
+
+    window._startReview = function() {
+      sessionStorage.setItem('review_ids', JSON.stringify(dueRows.map(r => r.question_id)));
+      window.location.href = './quiz.html?mode=review';
+    };
 
     const content = document.getElementById('mission-content');
 
@@ -1042,10 +1049,10 @@
       content.innerHTML = `
         <div class="mission-due-count">${dueCount}</div>
         <div class="mission-due-label">question${dueCount !== 1 ? 's' : ''} due for review today</div>
-        <a class="start-study-btn" href="./modules.html">
-          <span>Start Studying</span>
+        <button class="start-study-btn" onclick="_startReview()">
+          <span>Start Review</span>
           <span>→</span>
-        </a>
+        </button>
       `;
     } else if (allAttempts.length === 0) {
       content.innerHTML = `
