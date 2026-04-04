@@ -1190,10 +1190,12 @@
     // Image
     const img = document.getElementById('q-image');
     if (q.image_url) {
-      img.src = q.image_url;
+      const proxied = `https://images.weserv.nl/?url=${encodeURIComponent(q.image_url)}`;
+      img.src = proxied;
       img.style.display = 'block';
       img.loading = 'lazy';
-      img.onclick = () => openLightbox(q.image_url);
+      img.onclick = () => openLightbox(proxied);
+      img.onerror = () => { img.style.display = 'none'; };
     }
     else { img.style.display = 'none'; img.onclick = null; }
 
@@ -1704,7 +1706,7 @@
       card.innerHTML = `
         <div class="review-q-result ${resultCls}">${resultLabel}</div>
         <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Q${i+1}</div>
-        ${q.image_url ? `<img src="${q.image_url}" class="q-image" loading="lazy" alt="" onclick="openLightbox('${q.image_url}')">` : ''}
+        ${q.image_url ? `<img src="https://images.weserv.nl/?url=${encodeURIComponent(q.image_url)}" class="q-image" loading="lazy" alt="" onclick="openLightbox('https://images.weserv.nl/?url=${encodeURIComponent(q.image_url)}')" onerror="this.style.display='none'">` : ''}
         <div class="q-text" style="font-size:16px;margin-bottom:18px;">${q.text}</div>
         <div class="options-list">${optsHTML}</div>
         ${q.explanation || q.drive_link ? `
