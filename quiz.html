@@ -274,13 +274,59 @@
 
     .q-image {
       width: 100%;
-      max-height: 280px;
+      max-height: 420px;
       object-fit: contain;
       border-radius: var(--radius-md);
       border: 1px solid var(--border-soft);
       margin-bottom: 20px;
       background: var(--bg-alt);
+      cursor: zoom-in;
+      transition: opacity var(--t-fast);
     }
+    .q-image:hover { opacity: 0.88; }
+
+    /* ── LIGHTBOX ── */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(0,0,0,0.82);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+      animation: lbIn 0.18s var(--ease-out);
+    }
+    .lightbox.open { display: flex; }
+    @keyframes lbIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    .lightbox img {
+      max-width: 92vw;
+      max-height: 88vh;
+      object-fit: contain;
+      border-radius: var(--radius-lg);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+      animation: lbImgIn 0.2s var(--ease-out);
+    }
+    @keyframes lbImgIn {
+      from { transform: scale(0.93); opacity: 0; }
+      to   { transform: scale(1);    opacity: 1; }
+    }
+    .lightbox-close {
+      position: fixed;
+      top: 18px; right: 22px;
+      font-size: 28px;
+      color: rgba(255,255,255,0.7);
+      cursor: pointer;
+      line-height: 1;
+      transition: color var(--t-fast);
+      user-select: none;
+    }
+    .lightbox-close:hover { color: white; }
 
     .q-text {
       font-size: 18px;
@@ -805,7 +851,7 @@
     </div>
     <div class="timer-wrap" id="timer-wrap">
       <span class="timer-icon" id="timer-icon">⏱</span>
-      <span class="timer-digits" id="timer-digits">--:--</span>
+      <span class="timer-digits" id="timer-digits">20:00</span>
       <span class="grace-label">GRACE</span>
     </div>
   </header>
@@ -939,6 +985,12 @@
 
 <div class="toast-container" id="toast-container"></div>
 
+<!-- ── LIGHTBOX ── -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <span class="lightbox-close" onclick="closeLightbox()">✕</span>
+  <img id="lightbox-img" src="" alt="Expanded image">
+</div>
+
 <script type="module">
   import {
     supabase,
@@ -974,14 +1026,13 @@
   let lastScoreData  = null;
   let lastTimeUsed   = 0;
 
-  // Timer — configurable via URL param (10–45 min), default 20 min
-  const DEFAULT_MINUTES = 20;
-  const QUIZ_SECONDS = DEFAULT_MINUTES * 60; // placeholder; real value set in init()
+  // Timer — always 20 min flat for both modes
+  const QUIZ_SECONDS = 20 * 60;
   let totalSeconds  = QUIZ_SECONDS;
   let secondsLeft   = QUIZ_SECONDS;
   let timerInterval = null;
   let graceActive   = false;
-  let graceLeft     = Math.round(QUIZ_SECONDS * 0.1);
+  let graceLeft     = Math.round(QUIZ_SECONDS * 0.1); // 2 min grace (10% of 20 min)
 
   // ══════════════════════════════════════════════
   // ROASTS
@@ -1020,13 +1071,6 @@
     chapterIds = params.get('chapters') ? params.get('chapters').split(',') : [];
     isRedoMode = params.get('redo') === '1';
 
-    // Timer: read from URL (10–45 min), clamp, default 20
-    const timerParam = parseInt(params.get('timer') || '20', 10);
-    const timerMins  = Math.min(45, Math.max(10, isNaN(timerParam) ? 20 : timerParam));
-    totalSeconds = timerMins * 60;
-    secondsLeft  = totalSeconds;
-    graceLeft    = Math.round(totalSeconds * 0.1); // 10% grace
-
     if (!moduleId || chapterIds.length === 0) {
       showError('Missing quiz parameters. Start a quiz from the Modules page.');
       return;
@@ -1061,7 +1105,8 @@
         _opts: shuffle(q.options || [])
       }));
 
-      // Timer already set in init() from URL param — no override needed
+      // Timer is always 20 min flat — no scaling needed
+      secondsLeft = totalSeconds;
 
       setLoading('Almost there…');
       await new Promise(r => setTimeout(r, 300));
@@ -1144,8 +1189,13 @@
 
     // Image
     const img = document.getElementById('q-image');
-    if (q.image_url) { img.src = q.image_url; img.style.display = 'block'; }
-    else              { img.style.display = 'none'; }
+    if (q.image_url) {
+      img.src = q.image_url;
+      img.style.display = 'block';
+      img.loading = 'lazy';
+      img.onclick = () => openLightbox(q.image_url);
+    }
+    else { img.style.display = 'none'; img.onclick = null; }
 
     // Text
     document.getElementById('q-text').textContent = q.text;
@@ -1268,7 +1318,7 @@
       if (secondsLeft <= 0) {
         secondsLeft = 0;
         graceActive = true;
-        toast(`⏰ Time's up! ${Math.round(graceLeft / 60) || 1}m grace period.`, 'info', 5000);
+        toast('⏰ Time\'s up! 2 minutes grace period.', 'info', 5000);
       }
       updateTimer();
     }
@@ -1311,8 +1361,7 @@
   }
 
   function timeUsed() {
-    const graceFull = Math.round(totalSeconds * 0.1);
-    if (graceActive) return totalSeconds + (graceFull - graceLeft);
+    if (graceActive) return totalSeconds + (2 * 60 - graceLeft);
     return totalSeconds - secondsLeft;
   }
 
@@ -1547,7 +1596,7 @@
 
     if (mode === 'hard' && sd.scorePct >= 90)              await award('big_brain');
     if (sd.scorePct >= 100)                                await award('perfectionist');
-    if (mode === 'hard' && (totalSeconds - used) >= totalSeconds * 0.5)   await award('speedrun');
+    if (mode === 'hard' && (totalSeconds - used) >= 600)   await award('speedrun');
 
     const { count } = await supabase
       .from('attempts').select('id', { count: 'exact', head: true }).eq('user_id', currentUser.id);
@@ -1655,7 +1704,7 @@
       card.innerHTML = `
         <div class="review-q-result ${resultCls}">${resultLabel}</div>
         <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Q${i+1}</div>
-        ${q.image_url ? `<img src="${q.image_url}" class="q-image" alt="">` : ''}
+        ${q.image_url ? `<img src="${q.image_url}" class="q-image" loading="lazy" alt="" onclick="openLightbox('${q.image_url}')">` : ''}
         <div class="q-text" style="font-size:16px;margin-bottom:18px;">${q.text}</div>
         <div class="options-list">${optsHTML}</div>
         ${q.explanation || q.drive_link ? `
@@ -1691,7 +1740,7 @@
     const qs = JSON.parse(stored);
     if (qs.length === 0) { toast('You nailed them all! Nothing to redo. 🎉', 'success', 4000); return; }
 
-    const params = new URLSearchParams({ mode, module: moduleId, name: moduleName, chapters: chapterIds.join(','), redo: '1', timer: Math.round(totalSeconds / 60) });
+    const params = new URLSearchParams({ mode, module: moduleId, name: moduleName, chapters: chapterIds.join(','), redo: '1' });
     window.location.href = `quiz.html?${params.toString()}`;
   };
 
@@ -1718,6 +1767,24 @@
     c.appendChild(t);
     setTimeout(() => t.remove(), dur);
   }
+
+  // ══════════════════════════════════════════════
+  // LIGHTBOX
+  // ══════════════════════════════════════════════
+  window.openLightbox = function(src) {
+    document.getElementById('lightbox-img').src = src;
+    document.getElementById('lightbox').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeLightbox = function() {
+    document.getElementById('lightbox').classList.remove('open');
+    document.body.style.overflow = '';
+  };
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeLightbox();
+  });
 
   // ══════════════════════════════════════════════
   // BOOT
