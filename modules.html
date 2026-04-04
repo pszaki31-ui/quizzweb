@@ -10,6 +10,105 @@
        MODULES PAGE STYLES
        ══════════════════════════════════════════════ */
 
+    /* ── TIMER PICKER ── */
+    .timer-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+      margin-top: 16px;
+    }
+
+    .timer-picker-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .timer-slider-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .timer-slider {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 5px;
+      border-radius: 99px;
+      background: var(--bg-alt);
+      outline: none;
+      cursor: pointer;
+      transition: background var(--t-fast);
+    }
+
+    .timer-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--cyan-dark));
+      cursor: pointer;
+      box-shadow: 0 2px 8px var(--cyan-glow);
+      border: 2px solid white;
+      transition: transform var(--t-fast), box-shadow var(--t-fast);
+    }
+
+    .timer-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+      box-shadow: 0 3px 14px var(--cyan-glow);
+    }
+
+    .timer-slider::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--cyan-dark));
+      cursor: pointer;
+      box-shadow: 0 2px 8px var(--cyan-glow);
+      border: 2px solid white;
+    }
+
+    .timer-display {
+      font-family: 'DM Mono', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--cyan-dark);
+      min-width: 52px;
+      text-align: right;
+      letter-spacing: 0.5px;
+    }
+
+    .timer-presets {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .timer-preset-btn {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: inherit;
+      border: 1.5px solid var(--border-soft);
+      background: var(--surface-alt);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--t-fast);
+    }
+
+    .timer-preset-btn:hover,
+    .timer-preset-btn.active {
+      background: var(--cyan-wash);
+      border-color: var(--cyan);
+      color: var(--cyan-dark);
+    }
+
     /* ── MODULE GRID ── */
     .modules-grid {
       display: grid;
@@ -530,6 +629,23 @@
               </button>
             </div>
 
+            <!-- Timer picker -->
+            <div class="timer-label">⏱ Timer</div>
+            <div class="timer-picker-wrap">
+              <div class="timer-slider-row">
+                <input type="range" class="timer-slider" id="timer-slider"
+                  min="10" max="45" step="5" value="20"
+                  oninput="onTimerSlider(this.value)">
+                <div class="timer-display" id="timer-display">20m</div>
+              </div>
+              <div class="timer-presets">
+                <button class="timer-preset-btn" onclick="setTimer(10)">10m</button>
+                <button class="timer-preset-btn active" onclick="setTimer(20)">20m</button>
+                <button class="timer-preset-btn" onclick="setTimer(30)">30m</button>
+                <button class="timer-preset-btn" onclick="setTimer(45)">45m</button>
+              </div>
+            </div>
+
             <!-- Start button -->
             <button class="start-quiz-btn" id="start-btn" disabled onclick="startQuiz()">
               Start Quiz →
@@ -569,6 +685,7 @@
   let expandedModule = null;
   let selectedMode   = 'easy';
   let moduleProgress = {}; // { moduleId: pct }
+  let selectedTimer  = 20; // minutes
 
   const moduleIcons = {
     anatomy: '🦴', physiology: '❤️', biochemistry: '🧪',
@@ -866,6 +983,27 @@
     updateLaunchPanel();
   };
 
+  // ── Timer picker ───────────────────────────────────────────────
+  window.onTimerSlider = function(val) {
+    selectedTimer = parseInt(val);
+    document.getElementById('timer-display').textContent = `${selectedTimer}m`;
+    syncTimerPresets();
+  };
+
+  window.setTimer = function(val) {
+    selectedTimer = val;
+    document.getElementById('timer-slider').value = val;
+    document.getElementById('timer-display').textContent = `${val}m`;
+    syncTimerPresets();
+  };
+
+  function syncTimerPresets() {
+    document.querySelectorAll('.timer-preset-btn').forEach(btn => {
+      const v = parseInt(btn.textContent);
+      btn.classList.toggle('active', v === selectedTimer);
+    });
+  }
+
   // ── Start quiz ─────────────────────────────────────────────────
   window.startQuiz = function() {
     const chapterIds = Object.keys(selectedChapters);
@@ -880,7 +1018,8 @@
       mode:     selectedMode,
       module:   moduleId,
       name:     moduleName,
-      chapters: chapterIds.join(',')
+      chapters: chapterIds.join(','),
+      timer:    selectedTimer
     });
 
     window.location.href = `quiz.html?${params.toString()}`;
