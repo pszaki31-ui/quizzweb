@@ -1071,22 +1071,30 @@
     chapterIds = params.get('chapters') ? params.get('chapters').split(',') : [];
     isRedoMode = params.get('redo') === '1';
 
-    if (!moduleId || chapterIds.length === 0) {
+    const isReviewMode = mode === 'review';
+
+    if (!isReviewMode && (!moduleId || chapterIds.length === 0)) {
       showError('Missing quiz parameters. Start a quiz from the Modules page.');
       return;
     }
 
-    document.getElementById('topbar-module').textContent = moduleName;
+    document.getElementById('topbar-module').textContent = isReviewMode ? 'Daily Review' : moduleName;
     const badge = document.getElementById('topbar-mode-badge');
-    badge.textContent = mode === 'hard' ? '🔥 Hard' : '🌱 Easy';
-    badge.className   = `topbar-mode-badge ${mode}`;
+    badge.textContent = isReviewMode ? '🔁 Review' : (mode === 'hard' ? '🔥 Hard' : '🌱 Easy');
+    badge.className   = `topbar-mode-badge ${isReviewMode ? 'easy' : mode}`;
 
     setLoading('Fetching questions…');
 
     try {
       let rawQs;
 
-      if (isRedoMode) {
+      if (isReviewMode) {
+        const stored = sessionStorage.getItem('review_ids');
+        if (!stored) { showError('No review data found. Go back to the dashboard.'); return; }
+        const ids = JSON.parse(stored);
+        const { data } = await supabase.from('questions').select('*').in('id', ids);
+        rawQs = shuffle(data || []);
+      } else if (isRedoMode) {
         const stored = sessionStorage.getItem('redoQuestions');
         if (!stored) { showError('No redo data found. Complete a quiz first.'); return; }
         rawQs = shuffle(JSON.parse(stored));
