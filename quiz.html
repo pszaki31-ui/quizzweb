@@ -805,7 +805,7 @@
     </div>
     <div class="timer-wrap" id="timer-wrap">
       <span class="timer-icon" id="timer-icon">⏱</span>
-      <span class="timer-digits" id="timer-digits">20:00</span>
+      <span class="timer-digits" id="timer-digits">--:--</span>
       <span class="grace-label">GRACE</span>
     </div>
   </header>
@@ -974,13 +974,14 @@
   let lastScoreData  = null;
   let lastTimeUsed   = 0;
 
-  // Timer — always 20 min flat for both modes
-  const QUIZ_SECONDS = 20 * 60;
+  // Timer — configurable via URL param (10–45 min), default 20 min
+  const DEFAULT_MINUTES = 20;
+  const QUIZ_SECONDS = DEFAULT_MINUTES * 60; // placeholder; real value set in init()
   let totalSeconds  = QUIZ_SECONDS;
   let secondsLeft   = QUIZ_SECONDS;
   let timerInterval = null;
   let graceActive   = false;
-  let graceLeft     = Math.round(QUIZ_SECONDS * 0.1); // 2 min grace (10% of 20 min)
+  let graceLeft     = Math.round(QUIZ_SECONDS * 0.1);
 
   // ══════════════════════════════════════════════
   // ROASTS
@@ -1019,6 +1020,13 @@
     chapterIds = params.get('chapters') ? params.get('chapters').split(',') : [];
     isRedoMode = params.get('redo') === '1';
 
+    // Timer: read from URL (10–45 min), clamp, default 20
+    const timerParam = parseInt(params.get('timer') || '20', 10);
+    const timerMins  = Math.min(45, Math.max(10, isNaN(timerParam) ? 20 : timerParam));
+    totalSeconds = timerMins * 60;
+    secondsLeft  = totalSeconds;
+    graceLeft    = Math.round(totalSeconds * 0.1); // 10% grace
+
     if (!moduleId || chapterIds.length === 0) {
       showError('Missing quiz parameters. Start a quiz from the Modules page.');
       return;
@@ -1053,8 +1061,7 @@
         _opts: shuffle(q.options || [])
       }));
 
-      // Timer is always 20 min flat — no scaling needed
-      secondsLeft = totalSeconds;
+      // Timer already set in init() from URL param — no override needed
 
       setLoading('Almost there…');
       await new Promise(r => setTimeout(r, 300));
@@ -1261,7 +1268,7 @@
       if (secondsLeft <= 0) {
         secondsLeft = 0;
         graceActive = true;
-        toast('⏰ Time\'s up! 2 minutes grace period.', 'info', 5000);
+        toast(`⏰ Time's up! ${Math.round(graceLeft / 60) || 1}m grace period.`, 'info', 5000);
       }
       updateTimer();
     }
@@ -1304,7 +1311,8 @@
   }
 
   function timeUsed() {
-    if (graceActive) return totalSeconds + (2 * 60 - graceLeft);
+    const graceFull = Math.round(totalSeconds * 0.1);
+    if (graceActive) return totalSeconds + (graceFull - graceLeft);
     return totalSeconds - secondsLeft;
   }
 
@@ -1539,7 +1547,7 @@
 
     if (mode === 'hard' && sd.scorePct >= 90)              await award('big_brain');
     if (sd.scorePct >= 100)                                await award('perfectionist');
-    if (mode === 'hard' && (totalSeconds - used) >= 600)   await award('speedrun');
+    if (mode === 'hard' && (totalSeconds - used) >= totalSeconds * 0.5)   await award('speedrun');
 
     const { count } = await supabase
       .from('attempts').select('id', { count: 'exact', head: true }).eq('user_id', currentUser.id);
@@ -1683,7 +1691,7 @@
     const qs = JSON.parse(stored);
     if (qs.length === 0) { toast('You nailed them all! Nothing to redo. 🎉', 'success', 4000); return; }
 
-    const params = new URLSearchParams({ mode, module: moduleId, name: moduleName, chapters: chapterIds.join(','), redo: '1' });
+    const params = new URLSearchParams({ mode, module: moduleId, name: moduleName, chapters: chapterIds.join(','), redo: '1', timer: Math.round(totalSeconds / 60) });
     window.location.href = `quiz.html?${params.toString()}`;
   };
 
